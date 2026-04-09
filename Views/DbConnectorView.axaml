@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AcrossReportDesigner.Views.DbConnectorView">
+	<!-- ✅ 正しいRow構成 -->
+	<Grid RowDefinitions="Auto,Auto,2*,Auto,Auto,3*"
+          Margin="8">
+		<!-- 接続文字列 -->
+		<TextBox x:Name="ConnectionStringTextBox"
+                 Grid.Row="0"/>
+		<!-- ✅ 操作バー -->
+		<Grid Grid.Row="1"
+			  ColumnDefinitions="260,140,Auto,Auto,Auto,Auto,Auto"
+			  ColumnSpacing="6"
+			  Margin="0,6,0,6">
+			<!-- ✅ SQL履歴ドロップダウン -->
+			<ComboBox x:Name="HistoryComboBox"
+					  Grid.Column="0"
+					  Height="34"/>
+			<!-- ✅ DB種別 -->
+			<ComboBox x:Name="DbTypeComboBox"
+					  Grid.Column="1"
+					  Height="34"
+					  SelectedIndex="0">
+				<ComboBoxItem Content="Oracle"/>
+				<ComboBoxItem Content="SQL Server"/>
+				<ComboBoxItem Content="PostgreSQL"/>
+				<ComboBoxItem Content="MySQL"/>
+				<ComboBoxItem Content="SQLite"/>
+				<ComboBoxItem Content="JSON"/>
+				<ComboBoxItem Content="CSV"/>
+			</ComboBox>
+			<!-- ✅ ボタン共通スタイル -->
+			<Grid.Styles>
+				<Style Selector="Button">
+					<Setter Property="Width" Value="110"/>
+					<Setter Property="Height" Value="34"/>
+					<Setter Property="FontSize" Value="14"/>
+					<Setter Property="HorizontalContentAlignment" Value="Center"/>
+					<Setter Property="VerticalContentAlignment" Value="Center"/>
+				</Style>
+			</Grid.Styles>
+			<!-- ✅ 接続確認 -->
+			<Button Grid.Column="2"
+					Content="接続確認"
+					Click="Connect_Click"/>
+			<!-- ✅ SQL実行 -->
+			<Button x:Name="ExecuteButton"
+					Grid.Column="3"
+					Content="SQL実行"
+					Click="Execute_Click"/>
+			<!-- ✅ JSON出力 -->
+			<Button Grid.Column="4"
+					Content="JSON出力"
+					Click="ExportJson_Click"/>
+			<!-- ✅ 履歴チェック（クリアの横へ移動） -->
+			<Button Grid.Column="5"
+					Content="履歴"
+					Click="History_Click"/>
+			<!-- ✅ クリア -->
+			<Button Grid.Column="6"
+					Content="クリア"
+					Click="Clear_Click"/>
+
+		</Grid>
+		<!-- ✅ SQL入力 -->
+		<Border Grid.Row="2"
+				BorderBrush="Gray"
+				BorderThickness="1"
+				Margin="0">
+			<TextBox x:Name="SqlTextBox"
+					 AcceptsReturn="True"
+					 TextWrapping="NoWrap"/>
+		</Border>
+		<!-- ✅ Parameter + Preview 横並びエリア -->
+		<Border Grid.Row="3"
+				Grid.RowSpan="3"
+				BorderBrush="Gray"
+				BorderThickness="1"
+				Margin="0,1,1,1">		
+			<Grid ColumnDefinitions="280,1,*">		
+				<Border Grid.Column="0"
+						BorderBrush="Gray"
+						BorderThickness="1"
+						Padding="6">
+					<DockPanel>
+						<!-- ✅ 上：追加ボタン -->
+						<Button Content="パラメータ追加"
+								Height="34"
+								FontSize="14"
+								Margin="0,0,0,8"
+								HorizontalAlignment="Stretch"
+								Click="AddParam_Click"
+								DockPanel.Dock="Top"/>
+						<!-- ✅ 下：パラメータ2列Grid -->
+						<ScrollViewer VerticalScrollBarVisibility="Auto">
+							<ItemsControl x:Name="ParamItems">
+								<!-- ✅ 縦に並べる -->
+								<ItemsControl.ItemsPanel>
+									<ItemsPanelTemplate>
+										<StackPanel Orientation="Vertical"
+													Spacing="6"/>
+									</ItemsPanelTemplate>
+								</ItemsControl.ItemsPanel>
+								<!-- ✅ 1行＝2列 -->
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+										<Grid ColumnDefinitions="120,*"
+											  ColumnSpacing="6">
+											<!-- ✅ 左列：Name -->
+											<TextBox Grid.Column="0"
+													 Height="32"
+													 FontSize="14"
+													 Text="{Binding Name, Mode=TwoWay}"/>
+											<!-- ✅ 右列：Value -->
+											<TextBox Grid.Column="1"
+													 Height="32"
+													 FontSize="16"
+													 Text="{Binding Value, Mode=TwoWay}"
+													 Tag="{Binding}"
+													 KeyDown="ParamBox_KeyDown"/>
+										</Grid>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</ScrollViewer>
+					</DockPanel>
+				</Border>
+				<!-- ✅ 縦Splitter -->
+				<GridSplitter Grid.Column="1"
+							  Width="0"
+							  Background="#A0A0A0"
+							  HorizontalAlignment="Stretch"/>
+				<!-- ✅ 右：PreviewGrid -->
+				<Border Grid.Column="2"
+						BorderBrush="Gray"
+						BorderThickness="1"
+						Margin="0">
+					<DataGrid x:Name="PreviewGrid"
+							  AutoGenerateColumns="False"
+							  HeadersVisibility="All"
+							  GridLinesVisibility="All"
+							  Background="White"
+							  IsReadOnly="True"/>
+				</Border>
+			</Grid>
+		</Border>
+	</Grid>
+</UserControl>

@@ -1,0 +1,99 @@
+<!-- Views/LicenseDialog.axaml -->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AcrDesigner.ViewModels"
+        x:Class="AcrDesigner.Views.LicenseDialog"
+        x:DataType="vm:LicenseDialogViewModel"
+        Title="ACR Designer - ライセンス登録"
+        Width="480" Height="340"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False">
+
+	<Window.Styles>
+		<Style Selector="TextBlock.label">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Foreground" Value="#555"/>
+			<Setter Property="Margin" Value="0,0,0,4"/>
+		</Style>
+		<Style Selector="Button.primary">
+			<Setter Property="Background" Value="#2563EB"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Padding" Value="20,8"/>
+			<Setter Property="CornerRadius" Value="4"/>
+		</Style>
+		<Style Selector="Button.secondary">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Foreground" Value="#555"/>
+			<Setter Property="Padding" Value="20,8"/>
+		</Style>
+	</Window.Styles>
+
+	<Grid RowDefinitions="Auto,*,Auto" Margin="32">
+
+		<!-- ヘッダー -->
+		<StackPanel Grid.Row="0" Margin="0,0,0,20">
+			<TextBlock Text="ライセンスキーを入力してください"
+                       FontSize="16" FontWeight="SemiBold"/>
+			<TextBlock Margin="0,6,0,0" FontSize="12" Foreground="#666"
+                       TextWrapping="Wrap">
+				<Run Text="ライセンスキーをお持ちでない場合、ウォーターマーク付きでご利用いただけます。"/>
+			</TextBlock>
+		</StackPanel>
+
+		<!-- 入力エリア -->
+		<StackPanel Grid.Row="1" Spacing="12">
+
+			<!-- メールアドレス -->
+			<StackPanel>
+				<TextBlock Classes="label" Text="メールアドレス"/>
+				<TextBox Text="{Binding Email}"
+                         Watermark="you@example.com"
+                         FontSize="13"
+                         IsEnabled="{Binding !IsBusy}"/>
+			</StackPanel>
+
+			<!-- ライセンスキー -->
+			<StackPanel>
+				<TextBlock Classes="label" Text="ライセンスキー"/>
+				<TextBox Text="{Binding LicenseKey}"
+                         Watermark="ACR-XXXX-XXXX-XXXX"
+                         FontFamily="Courier New, Consolas, monospace"
+                         FontSize="13"
+                         IsEnabled="{Binding !IsBusy}"/>
+			</StackPanel>
+
+			<!-- エラー / 成功メッセージ -->
+			<TextBlock FontSize="12"
+                       TextWrapping="Wrap"
+                       Text="{Binding Message}"
+                       Foreground="{Binding MessageColor}"
+                       IsVisible="{Binding HasMessage}"/>
+		</StackPanel>
+
+		<!-- ボタン -->
+		<Grid Grid.Row="2" ColumnDefinitions="*,Auto,8,Auto" Margin="0,20,0,0">
+			<TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       FontSize="12">
+				<Run Text="キーの申請は"/>
+				<Run Foreground="#2563EB"
+                     TextDecorations="Underline"
+                     Text="こちら"/>
+			</TextBlock>
+
+			<Button Grid.Column="1"
+                    Classes="secondary"
+                    Content="スキップ（ウォーターマーク付き）"
+                    Command="{Binding SkipCommand}"
+                    IsVisible="{Binding CanSkip}"
+                    IsEnabled="{Binding !IsBusy}"/>
+
+			<Button Grid.Column="3"
+                    Classes="primary"
+                    Content="{Binding ActivateButtonText}"
+                    Command="{Binding ActivateCommand}"
+                    IsEnabled="{Binding CanActivate}"/>
+		</Grid>
+	</Grid>
+</Window>

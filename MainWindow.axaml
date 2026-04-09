@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:AcrossReportDesigner.Views"
+        x:Class="AcrossReportDesigner.Views.MainWindow"
+        Title="Across Report Designer ver1.0.1"
+        Width="1200" Height="800"
+        WindowStartupLocation="CenterScreen">
+	<DockPanel>
+		<!-- ✅ 上部メニュー（ボタン） -->
+		<Border DockPanel.Dock="Top"
+                Background="#F0F0F0"
+                BorderBrush="#C0C0C0"
+                BorderThickness="0,0,0,1">
+			<StackPanel Orientation="Horizontal"
+                        Spacing="6"
+                        Margin="6">
+				<!-- ✅ 上部ボタン共通スタイル -->
+				<StackPanel.Styles>
+					<Style Selector="Button">
+						<Setter Property="Width" Value="110"/>
+						<Setter Property="Height" Value="34"/>
+						<Setter Property="HorizontalContentAlignment" Value="Center"/>
+						<Setter Property="VerticalContentAlignment" Value="Center"/>
+						<Setter Property="FontSize" Value="14"/>
+						<Setter Property="Padding" Value="6,0"/>
+					</Style>
+				</StackPanel.Styles>
+				<!-- ✅ ボタン群 -->
+				<Button Content="デザイナー"
+                        Click="Designer_Click"/>
+				<Button Content="データ作成"
+                        Click="DataConnector_Click"/>
+				<Button Content="データ結合"
+                        Click="DataViewer_Click"/>
+				<Button Content="終　了"
+                        Click="Exit_Click"/>
+			</StackPanel>
+		</Border>
+
+		<!-- ✅ 右サイドパネル（DockPanel.Dock="Right"が必須） -->
+		<Border DockPanel.Dock="Right"
+                Width="180"
+                BorderBrush="#C0C0C0"
+                BorderThickness="1,0,0,0"
+                Background="#F5F5F5">
+			<views:LanguagePanelView
+                DataContext="{Binding LanguagePanel}" />
+		</Border>
+
+		<!-- ✅ メイン表示領域（最後に残りを埋める） -->
+		<ContentControl x:Name="MainContent"/>
+	</DockPanel>
+</Window>

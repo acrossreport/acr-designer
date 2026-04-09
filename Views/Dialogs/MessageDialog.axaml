@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AcrossReportDesigner.Views.Dialogs.MessageDialog"
+        Width="300"
+        Height="150"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+	<Border Padding="20">
+		<StackPanel Spacing="24">
+
+			<TextBlock x:Name="MessageBlock"
+                       TextWrapping="Wrap"
+                       FontSize="14"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Stretch"/>
+
+			<!-- ボタンエリア（Gridで中央固定） -->
+			<Grid ColumnDefinitions="*,Auto,20,Auto,*">
+
+				<Button Grid.Column="1"
+                        Content="はい"
+                        Width="90"
+                        Height="30"
+                        FontSize="13"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Click="Yes_Click"/>
+
+				<Button Grid.Column="3"
+                        Content="いいえ"
+                        Width="90"
+                        Height="30"
+                        FontSize="13"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Click="No_Click"/>
+
+			</Grid>
+
+		</StackPanel>
+	</Border>
+</Window>

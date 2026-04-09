@@ -1,0 +1,360 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:primitives="clr-namespace:Avalonia.Controls.Primitives;assembly=Avalonia.Controls"
+    xmlns:conv="clr-namespace:AcrossReportDesigner.Converters"
+    x:Class="AcrossReportDesigner.Views.DesignerView">
+
+	<UserControl.Resources>
+		<conv:BooleanNegationConverter x:Key="NotBool"/>
+	</UserControl.Resources>
+	<Grid>
+	<DockPanel>
+		<!-- ===================== 上部バー ===================== -->
+		<Border DockPanel.Dock="Top"
+				Background="#E8F4FF"
+				BorderBrush="#B0C4DE"
+				BorderThickness="0,0,0,1">
+			<Grid Margin="3">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<!-- 左：ボタン群 -->
+				<StackPanel Orientation="Horizontal" Spacing="6" Grid.Column="0">
+					<StackPanel.Styles>
+						<Style Selector="Button">
+							<Setter Property="Width" Value="80"/>
+							<Setter Property="Height" Value="32"/>
+							<Setter Property="Padding" Value="0"/>
+							<Setter Property="HorizontalContentAlignment" Value="Center"/>
+							<Setter Property="VerticalContentAlignment" Value="Center"/>
+						</Style>
+					</StackPanel.Styles>
+					<Button x:Name="NewButton" Content="新規"/>
+					<Button x:Name="ClearButton" Content="クリア"/>
+					<Button x:Name="LoadButton" Content="開く"/>
+					<Button x:Name="SaveButton" Content="保存"/>
+				</StackPanel>
+				<!-- 右：ステータス表示 -->
+				<TextBlock x:Name="StatusText"
+						   Grid.Column="1"
+						   VerticalAlignment="Center"
+						   HorizontalAlignment="Right"
+						   FontSize="14"
+						   Foreground="Black"
+						   Text="準備完了"/>
+			</Grid>
+		</Border>
+		<!-- ===================== メイン ===================== -->
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<!-- 左 -->
+				<ColumnDefinition Width="210"
+								  MinWidth="210"
+								  MaxWidth="300"/>
+				<!-- 左Splitter -->
+				<ColumnDefinition Width="4"/>
+				<!-- 中央 -->
+				<ColumnDefinition Width="*"/>
+				<!-- 右Splitter -->
+				<ColumnDefinition Width="4"/>
+				<!-- 右 -->
+				<ColumnDefinition Width="210"
+								  MinWidth="210"
+								  MaxWidth="300"/>
+			</Grid.ColumnDefinitions>
+			<!-- ================= 左パネル ================= -->
+			<Border Grid.Column="0"
+					Background="LightCyan"
+					Padding="6">
+				<StackPanel x:Name="ToolPanel" Spacing="3">
+					<TextBlock Text="ページ設定" FontSize="12" FontWeight="Bold"/>
+					<!-- 用紙サイズ + 向き 横並び -->
+					<StackPanel Orientation="Horizontal" Spacing="8">
+						<StackPanel>
+							<TextBlock Text="用紙サイズ" FontSize="10"/>
+							<ComboBox x:Name="PaperSizeCombo"
+									  Width="90"
+									  Height="18"
+									  FontSize="15"
+									  HorizontalContentAlignment="Center"
+									  VerticalContentAlignment="Center">
+								<ComboBoxItem>A4</ComboBoxItem>
+								<ComboBoxItem>B4</ComboBoxItem>
+								<ComboBoxItem>A3</ComboBoxItem>
+								<ComboBoxItem>B5</ComboBoxItem>
+							</ComboBox>
+						</StackPanel>
+						<StackPanel>
+							<TextBlock Text="向き" FontSize="10"/>
+							<StackPanel Orientation="Horizontal" Spacing="4">
+								<Button x:Name="PortraitButton"
+										Content="縦"
+										Width="40"
+										Height="30"
+										FontSize="13"
+										HorizontalContentAlignment="Center"
+										VerticalContentAlignment="Center"/>
+								<Button x:Name="LandscapeButton"
+										Content="横"
+										Width="40"
+										Height="30"
+										FontSize="13"
+										HorizontalContentAlignment="Center"
+										VerticalContentAlignment="Center"/>
+							</StackPanel>
+						</StackPanel>
+					</StackPanel>
+					<!-- 紙サイズ -->
+					<TextBlock Text="紙サイズ (mm)" FontSize="11"/>
+					<StackPanel Orientation="Horizontal" Spacing="6">
+						<StackPanel>
+							<TextBlock Text="幅" FontSize="10"/>
+							<TextBox x:Name="PaperWidthBox"
+									 Width="90"
+									 Height="28"
+									 FontSize="14"
+									 IsReadOnly="True"
+									 HorizontalContentAlignment="Right"
+									 VerticalContentAlignment="Center"/>
+						</StackPanel>
+						<StackPanel>
+							<TextBlock Text="高さ" FontSize="10"/>
+							<TextBox x:Name="PaperHeightBox"
+									 Width="90"
+									 Height="28"
+									 FontSize="14"
+									 IsReadOnly="True"
+									 HorizontalContentAlignment="Right"
+									 VerticalContentAlignment="Center"/>
+						</StackPanel>
+					</StackPanel>
+					<!-- 余白 -->
+					<StackPanel Orientation="Vertical" Spacing="6">
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock Text="上マージン:" Width="60" VerticalAlignment="Center"/>
+							<NumericUpDown x:Name="MarginTopBox"
+										   Width="120"
+										   Height="28"
+										   FontSize="14"
+										   Minimum="0"
+										   Maximum="999.99"
+										   Increment="0.01"
+										   Value="1.00"
+										   FormatString="F2"
+										   HorizontalContentAlignment="Right"/>
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock Text="下マージン:" Width="60" VerticalAlignment="Center"/>
+							<NumericUpDown x:Name="MarginBottomBox"
+										   Width="120"
+										   Height="28"
+										   FontSize="14"
+										   Minimum="0"
+										   Maximum="999.99"
+										   Increment="0.01"
+										   Value="1.00"
+										   FormatString="F2"
+										   HorizontalContentAlignment="Right"/>
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock Text="左マージン:" Width="60" VerticalAlignment="Center"/>
+							<NumericUpDown x:Name="MarginLeftBox"
+										   Width="120"
+										   Height="28"
+										   FontSize="14"
+										   Minimum="0"
+										   Maximum="999.99"
+										   Increment="0.01"
+										   Value="1.00"
+										   FormatString="F2"
+										   HorizontalContentAlignment="Right"/>
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock Text="右マージン:" Width="60" VerticalAlignment="Center"/>
+							<NumericUpDown x:Name="MarginRightBox"
+										   Width="120"
+										   Height="28"
+										   FontSize="14"
+										   Minimum="0"
+										   Maximum="999.99"
+										   Increment="0.01"
+										   Value="1.00"
+										   FormatString="F2"
+										   HorizontalContentAlignment="Right"/>
+						</StackPanel>
+					</StackPanel>
+					<TextBlock Text="グリッド:" FontSize="11"/>
+					<ComboBox x:Name="GridCombo"
+							  Width="90"
+							  Height="28"
+							  FontSize="14"
+							  HorizontalContentAlignment="Center"
+							  VerticalContentAlignment="Center">
+						<ComboBoxItem Content="1mm"/>
+						<ComboBoxItem Content="5mm"/>
+						<ComboBoxItem Content="10mm"/>
+					</ComboBox>
+					<!-- ツール -->
+					<TextBlock Text="ツール" FontWeight="Bold"/>
+					<TextBlock Text="(ドラッグしてCanvas上に配置)" FontSize="9" Foreground="#666"/>
+					<Button x:Name="ToolLabelButton"
+									Content="🏷️ ラベル"
+									Tag="Label"
+									Height="30"
+									FontSize="13"
+									Cursor="Hand"/>
+					<Button x:Name="ToolTextButton"
+									Content="🔤 テキスト"
+									Tag="TextBox"
+									Height="30"
+									FontSize="13"
+									Cursor="Hand"/>
+					<Button x:Name="ToolLineButton"
+									Content="📏 ライン"
+									Tag="Line"
+									Height="30"
+									FontSize="13"
+									Cursor="Hand"/>
+					<Button x:Name="ToolShapeButton"
+									Content="⬛ 図形"
+									Tag="Shape"
+									Height="30"
+									FontSize="13"
+									Cursor="Hand"/>
+					<Separator/>
+					<!-- Zoom -->
+					<TextBlock Text="ズーム (CTRL + ホイール)"/>
+					<TextBlock x:Name="ZoomText"/>
+				</StackPanel>
+			</Border>
+			<!-- ================= 左Splitter ================= -->
+			<GridSplitter Grid.Column="1"
+						  Width="4"
+						  Background="#B0B0B0"
+						  ResizeDirection="Columns">
+			</GridSplitter>
+			<!-- ================= 中央キャンバス ================= -->
+			<ScrollViewer Grid.Column="2"
+						  x:Name="MainScroll"
+						  Background="#E5E5E5"
+						  HorizontalScrollBarVisibility="Auto"
+						  VerticalScrollBarVisibility="Auto"
+						  HorizontalContentAlignment="Left"
+						  VerticalContentAlignment="Top">
+				<Border x:Name="PageBorder"
+						Background="White"
+						BorderBrush="#888"
+						BorderThickness="1"
+						HorizontalAlignment="Left"
+						VerticalAlignment="Top">
+					<Canvas x:Name="PageCanvas"
+							Background="#01FFFFFF"
+							HorizontalAlignment="Left"
+							VerticalAlignment="Top"
+							DragDrop.AllowDrop="True"
+							PointerPressed="PageCanvas_PointerPressed"
+							PointerMoved="PageCanvas_PointerMoved"
+							PointerReleased="PageCanvas_PointerReleased"/>				</Border>
+			</ScrollViewer>
+			<!-- ================= 右Splitter ================= -->
+			<GridSplitter Grid.Column="3"
+						  Width="4"
+						  Background="#B0B0B0"
+						  ResizeDirection="Columns"
+						  HorizontalAlignment="Stretch"/>
+			<!-- ================= 右パネル ================= -->
+			<Border Grid.Column="4"
+					Background="LightCyan"
+					Padding="2">
+				<Grid RowDefinitions="3*,4,7*">
+					<TreeView x:Name="Tree"
+							  Grid.Row="0"
+							  SelectionChanged="Tree_SelectionChanged"
+							  Background="LightCyan">
+						<TreeView.Styles>
+							<Style Selector="TreeViewItem">
+								<Setter Property="Padding" Value="2,0,2,0"/>
+								<Setter Property="Margin" Value="0"/>
+								<Setter Property="MinHeight" Value="20"/>
+							</Style>
+							<Style Selector="TreeViewItem:selected">
+								<Setter Property="Background" Value="#5CBEC7"/>
+								<Setter Property="Foreground" Value="Black"/>
+							</Style>
+							<Style Selector="TreeViewItem:pointerover">
+								<Setter Property="Background" Value="#D7EEF1"/>
+							</Style>
+							<Style Selector="TreeViewItem > ItemsPresenter">
+								<Setter Property="Margin" Value="12,0,0,0"/>
+							</Style>
+						</TreeView.Styles>
+						<TreeView.ItemTemplate>
+							<TreeDataTemplate ItemsSource="{Binding Children}">
+								<StackPanel Orientation="Horizontal" Spacing="4">
+									<TextBlock Text="{Binding Icon}"
+											   FontSize="10"
+											   VerticalAlignment="Center"/>
+									<TextBlock Text="{Binding Name}"
+											   FontSize="11"
+											   VerticalAlignment="Center"/>
+								</StackPanel>
+							</TreeDataTemplate>
+						</TreeView.ItemTemplate>
+					</TreeView>
+					<!-- Splitter -->
+					<GridSplitter Grid.Row="1"
+								  Height="4"
+								  Background="#B0B0B0"/>
+					<!-- PropertyGrid -->
+					<ScrollViewer Grid.Row="2">
+						<ItemsControl ItemsSource="{Binding PropertyRows}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Grid ColumnDefinitions="4*,6*" Margin="1,1,1,1">
+										<TextBlock Text="{Binding Property}"
+												   VerticalAlignment="Center"
+												   FontSize="12"
+												   Margin="2,0,2,0"/>
+										<Grid Grid.Column="1">
+											<TextBox Text="{Binding Value}"
+													 IsEnabled="{Binding IsEditable}"
+													 IsVisible="{Binding IsText}"
+													 FontSize="12"
+													 Padding="2,1,2,1"
+													 MinHeight="0"/>
+											<ComboBox ItemsSource="{Binding ComboItems}"
+													  SelectedItem="{Binding Value}"
+													  IsEnabled="{Binding IsEditable}"
+													  IsVisible="{Binding IsCombo}"
+													  FontSize="12"
+													  Padding="2,1,2,1"
+													  MinHeight="0"/>
+											<CheckBox IsChecked="{Binding BoolValue}"
+													  IsEnabled="{Binding IsEditable}"
+													  IsVisible="{Binding IsCheck}"
+													  MinHeight="0"/>
+											<TextBox Text="{Binding Value}"
+													 IsEnabled="{Binding IsEditable}"
+													 IsVisible="{Binding IsNumeric}"
+													 FontSize="12"
+													 Padding="2,1,2,1"
+													 MinHeight="0"/>
+										</Grid>
+									</Grid>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				
+				</Grid>
+			</Border>
+		</Grid>
+	</DockPanel>
+	<!-- ゴーストオーバーレイ（ポインターキャプチャドラッグ用） -->
+	<Canvas x:Name="GhostLayer"
+			IsHitTestVisible="False"
+			ZIndex="9999"/>
+</Grid>
+</UserControl>

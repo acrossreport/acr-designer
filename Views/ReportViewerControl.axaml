@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AcrossReportDesigner.Views.ReportViewerControl">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- 操作バー -->
+        <Border Grid.Row="0"
+                Background="#F0F0F0"
+                BorderBrush="#C0C0C0"
+                BorderThickness="0,0,0,1"
+                Padding="6">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+
+                <Button x:Name="PrevButton" Content="前" Width="70"/>
+                <Button x:Name="NextButton" Content="次" Width="70"/>
+
+                <TextBlock x:Name="PageInfo"
+                           VerticalAlignment="Center"
+                           Margin="6,0,0,0"/>
+
+                <Separator Width="16"/>
+
+                <Button x:Name="ZoomOutButton" Content="－" Width="40"/>
+                <Button x:Name="ZoomInButton" Content="＋" Width="40"/>
+
+                <TextBlock x:Name="ZoomInfo"
+                           VerticalAlignment="Center"
+                           Margin="6,0,0,0"/>
+
+            </StackPanel>
+        </Border>
+
+        <!-- 表示エリア -->
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+            <Image x:Name="PageImage" Stretch="None"/>
+        </ScrollViewer>
+
+    </Grid>
+</UserControl>

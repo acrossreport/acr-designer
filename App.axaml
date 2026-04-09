@@ -1,0 +1,75 @@
+<!-- App.axaml -->
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AcrossReportDesigner"
+             x:Class="AcrossReportDesigner.App">
+	<!-- =========================
+         Resources
+         ========================= -->
+	<Application.Resources>
+		<local:LocalizationManager x:Key="Loc"/>
+		<!-- 色 -->
+		<Color x:Key="BaseBgColor">#EAFBFB</Color>
+		<Color x:Key="BorderColor">#A0CFCF</Color>
+		<Color x:Key="ButtonBgColor">#CFEDED</Color>
+		<Color x:Key="ButtonHoverColor">#BFE6E6</Color>
+		<Color x:Key="SelectionColor">#66CFC1</Color>
+		<!-- Brush -->
+		<SolidColorBrush x:Key="BaseBg" Color="{StaticResource BaseBgColor}"/>
+		<SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+		<SolidColorBrush x:Key="ButtonBg" Color="{StaticResource ButtonBgColor}"/>
+		<SolidColorBrush x:Key="ButtonHoverBg" Color="{StaticResource ButtonHoverColor}"/>
+		<SolidColorBrush x:Key="SelectionBg" Color="{StaticResource SelectionColor}"/>
+		<!-- ✅ 内蔵Fallbackフォント（Linux用にもなる） -->
+		<FontFamily x:Key="FallbackFont">
+			./Fonts/NotoSansJP-Regular.ttf
+		</FontFamily>
+		<!-- ✅ OS別フォントは App.axaml.cs で設定する -->
+		<!-- Resources["DefaultFontFamily"] が起動時に注入される -->
+
+		<!-- ✅ LocalizationManager をアプリ全体で使えるように登録 -->
+		<!-- services:LocalizationManager x:Key="Loc" / -->
+	</Application.Resources>
+
+	<!-- =========================
+         Styles
+         ========================= -->
+	<Application.Styles>
+		<FluentTheme />
+		<StyleInclude
+            Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+		<!-- ✅ Window 共通 -->
+		<Style Selector="Window">
+			<Setter Property="Background" Value="{StaticResource BaseBg}"/>
+			<!-- ✅ OS別フォントに統一 -->
+			<Setter Property="FontFamily"
+                    Value="{DynamicResource DefaultFontFamily}"/>
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
+		<!-- ✅ Button -->
+		<Style Selector="Button">
+			<Setter Property="Background" Value="{StaticResource ButtonBg}"/>
+			<Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+			<Setter Property="FontFamily"
+                    Value="{DynamicResource DefaultFontFamily}"/>
+		</Style>
+		<Style Selector="Button:pointerover">
+			<Setter Property="Background"
+                    Value="{StaticResource ButtonHoverBg}"/>
+		</Style>
+		<!-- ✅ DataGrid Selection -->
+		<Style Selector="DataGridRow:selected">
+			<Setter Property="Background"
+                    Value="{StaticResource SelectionBg}"/>
+		</Style>
+		<!-- ✅ TextBlock / TextBoxも統一 -->
+		<Style Selector="TextBlock">
+			<Setter Property="FontFamily"
+                    Value="{DynamicResource DefaultFontFamily}"/>
+		</Style>
+		<Style Selector="TextBox">
+			<Setter Property="FontFamily"
+                    Value="{DynamicResource DefaultFontFamily}"/>
+		</Style>
+	</Application.Styles>
+</Application>

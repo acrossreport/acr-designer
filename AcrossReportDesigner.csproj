@@ -1,0 +1,93 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+  <ItemGroup>
+    <AvaloniaXaml Remove="Schemas\**" />
+    <AvaloniaXaml Remove="Views\新しいフォルダー\**" />
+    <Compile Remove="Schemas\**" />
+    <Compile Remove="Views\新しいフォルダー\**" />
+    <EmbeddedResource Remove="Schemas\**" />
+    <EmbeddedResource Remove="Views\新しいフォルダー\**" />
+    <None Remove="Schemas\**" />
+    <None Remove="Views\新しいフォルダー\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Models\DesignerCanvasLogic.cs" />
+    <Compile Remove="Models\ReportCanvasRenderer.cs" />
+    <Compile Remove="Models\ToolFactory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaXaml Remove="App.axaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="App.axaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.10" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
+    <PackageReference Include="Avalonia.HtmlRenderer" Version="11.2.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.10" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="MySqlConnector" Version="2.5.0" />
+    <PackageReference Include="Npgsql" Version="10.0.1" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Resources\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Dialogs\MessageDialog.axaml.cs">
+      <DependentUpon>MessageDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\Dialogs\ConfirmDialog.axaml.cs">
+      <DependentUpon>ConfirmDialog.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\HtmlView.axaml.cs">
+      <DependentUpon>HtmlView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="Assets\" />
+  </ItemGroup>
+
+	<!-- Native DLL -->
+	<ItemGroup>
+	  <None Include="Native\axr_runtime.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Include="Native\axr_layout.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\Strings.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Resources\Strings.en.resx">
+	    <DependentUpon>Strings.resx</DependentUpon>
+	  </EmbeddedResource>
+	</ItemGroup>
+	<!-- ★ Rustビルド後に自動コピー -->
+	<Target Name="CopyRustDll" BeforeTargets="Build">
+	  <Copy SourceFiles="$(USERPROFILE)\Desktop\acr_rebuild\target\release\axr_runtime.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native\" SkipUnchangedFiles="true" Condition="Exists('$(USERPROFILE)\Desktop\acr_rebuild\target\release\axr_runtime.dll')" />
+	  <Copy SourceFiles="$(USERPROFILE)\Desktop\acr_html_engine\target\release\axr_layout.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native\" SkipUnchangedFiles="true" Condition="Exists('$(USERPROFILE)\Desktop\acr_html_engine\target\release\axr_layout.dll')" />
+	</Target>
+</Project>

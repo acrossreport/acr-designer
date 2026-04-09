@@ -1,0 +1,36 @@
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="AcrossReportDesigner.Views.Dialogs.ProgressDialog"
+    Width="360"
+    Height="170"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    Title="処理中">
+
+	<Border Padding="20">
+		<StackPanel Spacing="14">
+
+			<TextBlock x:Name="MessageText"
+                       Text="レンダリング中..."
+                       FontSize="16"
+                       FontWeight="SemiBold"/>
+
+			<!-- ％表示 -->
+			<TextBlock x:Name="PercentText"
+                       FontSize="14"
+                       HorizontalAlignment="Right"/>
+
+			<ProgressBar x:Name="MainProgress"
+                         Minimum="0"
+                         Maximum="100"
+                         Height="18"
+                         Width="300"/>
+
+			<TextBlock x:Name="CountText"
+                       FontSize="13"
+                       Foreground="DarkBlue"/>
+
+		</StackPanel>
+	</Border>
+</Window>
