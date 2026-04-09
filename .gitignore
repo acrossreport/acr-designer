@@ -1,7 +1,33 @@
-﻿/bin/
+/bin/
 /obj/
 /Native/
+/.vs/
+
+# Windows
 *.user
+*.suo
+Thumbs.db
+Desktop.ini
+
+# エディタ
 .vscode/
 .idea/
-*.suo
+
+# ログ
+*.Log
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# macOS ビルド成果物
+*.dylib
+
+# Linux ビルド成果物
+*.so
+*.so.*
