@@ -741,12 +741,17 @@ public partial class DesignerView : UserControl
 
         string defaultName =
             "AcrReport_" +
-            DateTime.Now.ToString("yyyyMMddHHmmss") +
-            ".acr";
+            DateTime.Now.ToString("yyyyMMddHHmmss");
+
         string templatePath =
             System.IO.Path.Combine(
                 AppContext.BaseDirectory,
                 "Template");
+
+        // ★ フォルダが存在しない場合は作成する
+        if (!Directory.Exists(templatePath))
+            Directory.CreateDirectory(templatePath);
+
         var dialog = new SaveFileDialog
         {
             Title = "保存",
@@ -761,15 +766,16 @@ public partial class DesignerView : UserControl
                 }
             }
         };
+
         var path = await dialog.ShowAsync(window);
         if (string.IsNullOrWhiteSpace(path)) return;
-        // 🔥 ここが重要
+
         if (!path.EndsWith(".acr", StringComparison.OrdinalIgnoreCase))
-        {
             path += ".acr";
-        }
+
         _logic.SaveAcr(path);
     }
+
     // =========================================================
     // ✅ PropertyGrid 行データ（編集通知付き）
     // =========================================================
@@ -877,6 +883,7 @@ public partial class DesignerView : UserControl
             e.Handled = true;
             return;
         }
+        
         // =========================
         // 範囲選択（背景のみ）
         // =========================
@@ -1518,27 +1525,36 @@ public partial class DesignerView : UserControl
             }
         }
     }
+
     private string? LoadTemplateFromArc(string path)
     {
         Debug.WriteLine("ARC opened: " + path);
         try
         {
             using var archive = System.IO.Compression.ZipFile.OpenRead(path);
+
+            // ★ 全エントリをデバッグ出力（何が入っているか確認）
+            foreach (var e in archive.Entries)
+                Debug.WriteLine("ZIP entry: " + e.FullName);
+            
             foreach (var entry in archive.Entries)
             {
-                if (entry.FullName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                // ★ version.json を除外して report.json のみ対象にする
+                if (entry.FullName.Equals("report.json", StringComparison.OrdinalIgnoreCase))
                 {
                     using var stream = entry.Open();
                     using var reader = new StreamReader(stream);
                     return reader.ReadToEnd();
                 }
             }
-            _logic?.StatusHandler?.Invoke("ACR-002: ARC内にJSONファイルが見つかりません。",true);
+            _logic?.StatusHandler?.Invoke("ACR-002: ARC内にJSONファイルが見つかりません。", true);
             return null;
         }
         catch (Exception ex)
         {
-            _logic?.StatusHandler?.Invoke("ACR-003: ARC読込エラー: { ex.Message}", true);
+            // ★ $ を追加して実際のエラー内容を表示
+            _logic?.StatusHandler?.Invoke($"ACR-003: ARC読込エラー: {ex.Message}", true);
+            Debug.WriteLine("LoadTemplateFromArc ERROR: " + ex.ToString());
             return null;
         }
     }

@@ -882,14 +882,12 @@ public sealed class DesignerCanvasLogic
         }
         return new List<OutlineNode> { pageNode };
     }
-    public void SaveJson(string path)
+
+    private void SaveJson(string path)
     {
-        // PaperWidth/PaperHeightはすでに表示向きの値のまま保存
-        // swapしない（ActiveReports仕様）
         double saveWidthMm  = PaperWidthMm;
         double saveHeightMm = PaperHeightMm;
 
-        // セクションリストをゼロから構築
         var sectionList = new List<Dictionary<string, object>>();
         foreach (var sec in _sections)
         {
@@ -907,7 +905,6 @@ public sealed class DesignerCanvasLogic
                     ["Text"]      = ctrl.Text ?? "",
                     ["DataField"] = ctrl.DataField ?? "",
                     ["Style"]     = ctrl.Style ?? "",
-                    ["_tag"]      = "Control"
                 };
                 if (ctrl.Type.Contains("Line"))
                 {
@@ -933,9 +930,9 @@ public sealed class DesignerCanvasLogic
                 ["BackColor"] = 16777215,
                 ["Control"]   = controlList
             };
-            // ACR.Detail 拡張：rowsPerPage
             if (sec.Name == "Detail")
                 secDict["rowsPerPage"] = sec.RowsPerPage;
+
             sectionList.Add(secDict);
         }
 
@@ -963,9 +960,71 @@ public sealed class DesignerCanvasLogic
                 }
         };
 
-        File.WriteAllText(path,
-            JsonSerializer.Serialize(root,
-                new JsonSerializerOptions { WriteIndented = true }));
+        string json = System.Text.Json.JsonSerializer.Serialize(
+            root,
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+
+        System.IO.File.WriteAllText(path, json);
+    }
+    public void SaveAcr(string path)
+    {
+        string tempDir =
+            System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "acr_" + Guid.NewGuid());
+
+        System.IO.Directory.CreateDirectory(tempDir);
+
+        string jsonPath =
+            System.IO.Path.Combine(tempDir, "report.json");
+
+        try
+        {
+            SaveJson(jsonPath);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine("SaveJson FAILED: " + ex.ToString());
+            StatusHandler?.Invoke($"ACR保存エラー(JSON): {ex.Message}", true);
+            return;
+        }
+
+        // ★ 書き込み確認
+        if (!System.IO.File.Exists(jsonPath) ||
+            new System.IO.FileInfo(jsonPath).Length == 0)
+        {
+            StatusHandler?.Invoke("ACR保存エラー: report.jsonが空です", true);
+            Debug.WriteLine("report.json is empty or missing!");
+            return;
+        }
+
+        var versionInfo = new
+        {
+            format = "ACR",
+            formatVersion = 1,
+            savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        };
+        string versionPath =
+            System.IO.Path.Combine(tempDir, "version.json");
+        System.IO.File.WriteAllText(
+            versionPath,
+            System.Text.Json.JsonSerializer.Serialize(
+                versionInfo,
+                new System.Text.Json.JsonSerializerOptions
+                { WriteIndented = true }));
+
+        if (System.IO.File.Exists(path))
+            System.IO.File.Delete(path);
+
+        System.IO.Compression.ZipFile.CreateFromDirectory(tempDir, path);
+
+        // ★ デバッグ用JSON横出し（リリース時削除）
+        string debugJson = System.IO.Path.ChangeExtension(path, ".json");
+        System.IO.File.Copy(jsonPath, debugJson, true);
+
+        System.IO.Directory.Delete(tempDir, true);
+
+        StatusHandler?.Invoke($"保存完了: {System.IO.Path.GetFileName(path)}", false);
     }
 
     // =======================================
@@ -1187,73 +1246,6 @@ public sealed class DesignerCanvasLogic
         if (s.Name.StartsWith("GroupFooter")) return 40;
         if (s.Name.StartsWith("PageFooter")) return 50;
         return 99;
-    }
-    public void SaveAcr(string path)
-    {
-        // -------------------------
-        // temp フォルダ作成
-        // -------------------------
-        string tempDir =
-            System.IO.Path.Combine(
-                System.IO.Path.GetTempPath(),
-                "acr_" + Guid.NewGuid());
-
-        System.IO.Directory.CreateDirectory(tempDir);
-
-        // -------------------------
-        // report.json 保存
-        // -------------------------
-        string jsonPath =
-            System.IO.Path.Combine(tempDir, "report.json");
-
-        SaveJson(jsonPath);
-
-        // -------------------------
-        // version.json 保存
-        // -------------------------
-        var versionInfo = new
-        {
-            format = "ACR",
-            formatVersion = 1,
-            savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-        };
-
-        string versionPath =
-            System.IO.Path.Combine(tempDir, "version.json");
-
-        System.IO.File.WriteAllText(
-            versionPath,
-            System.Text.Json.JsonSerializer.Serialize(
-                versionInfo,
-                new System.Text.Json.JsonSerializerOptions
-                {
-                    WriteIndented = true
-                }
-            ));
-
-        // -------------------------
-        // ZIP → .acr
-        // -------------------------
-        if (System.IO.File.Exists(path))
-            System.IO.File.Delete(path);
-
-        System.IO.Compression.ZipFile
-            .CreateFromDirectory(tempDir, path);
-
-        // -------------------------
-        // ★検証用：json横出し
-        // -------------------------
-        string debugJson =
-            System.IO.Path.ChangeExtension(path, ".json");
-
-        System.IO.File.Copy(jsonPath, debugJson, true);
-
-        // ↑ リリース時コメントアウト
-
-        // -------------------------
-        // temp削除
-        // -------------------------
-        System.IO.Directory.Delete(tempDir, true);
     }
     public void LoadAcr(string path)
     {
