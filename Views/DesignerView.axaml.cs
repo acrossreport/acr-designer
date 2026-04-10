@@ -1428,24 +1428,45 @@ public partial class DesignerView : UserControl
         }
         return null;
     }
+
+
     private void SyncPageSettingsFromLogic()
     {
         if (_logic == null) return;
-        // 用紙サイズ
-        PaperWidthBox.Text = _logic.PaperWidthMm.ToString("0");
+
+        // Orientation=2(横)のとき W>H になるよう入れ替えを保証
+        if (_logic.IsLandscape)
+        {
+            if (_logic.PaperWidthMm < _logic.PaperHeightMm)
+            {
+                var w = _logic.PaperHeightMm;
+                var h = _logic.PaperWidthMm;
+                _logic.SetPaperSize(w, h);
+            }
+        }
+
+        // ★ ApplyPaperSize()ではなくApplyPaperWidth()のみ呼ぶ
+        //   → Render()で確定したBorder高さ（yPx）を上書きしない
+        _logic.ApplyPaperWidth();
+
+        // 用紙サイズ表示
+        PaperWidthBox.Text  = _logic.PaperWidthMm.ToString("0");
         PaperHeightBox.Text = _logic.PaperHeightMm.ToString("0");
+
         // マージン
-        double topMm = UnitConverter.TwipsToMm(_logic.TopMarginTwip);
+        double topMm    = UnitConverter.TwipsToMm(_logic.TopMarginTwip);
         double bottomMm = UnitConverter.TwipsToMm(_logic.BottomMarginTwip);
-        double leftMm = UnitConverter.TwipsToMm(_logic.LeftMarginTwip);
-        double rightMm = UnitConverter.TwipsToMm(_logic.RightMarginTwip);
-        MarginTopBox.Value = (decimal)topMm;
+        double leftMm   = UnitConverter.TwipsToMm(_logic.LeftMarginTwip);
+        double rightMm  = UnitConverter.TwipsToMm(_logic.RightMarginTwip);
+        MarginTopBox.Value    = (decimal)topMm;
         MarginBottomBox.Value = (decimal)bottomMm;
-        MarginLeftBox.Value = (decimal)leftMm;
-        MarginRightBox.Value = (decimal)rightMm;
-        // サイズ名
+        MarginLeftBox.Value   = (decimal)leftMm;
+        MarginRightBox.Value  = (decimal)rightMm;
+
+        // サイズ名コンボ
         SetPaperComboBySize(_logic.PaperWidthMm, _logic.PaperHeightMm);
-        // 向き：ボタンのハイライトを統一
+
+        // 向きボタンハイライト
         _isLandscape = _logic.IsLandscape;
         UpdateOrientationButtons();
     }

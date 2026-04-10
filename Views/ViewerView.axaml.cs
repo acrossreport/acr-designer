@@ -171,7 +171,7 @@ namespace AcrossReportDesigner.Views
                     {
                 new FilePickerFileType("Across Template")
                 {
-                    Patterns = new[] { "*.arc", "*.acr" }
+                    Patterns = new[] { "*.arc", "*.acr", "*.json" }
                 }
                     }
                 });

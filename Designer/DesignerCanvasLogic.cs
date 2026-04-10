@@ -232,11 +232,21 @@ public sealed class DesignerCanvasLogic
             double widthMm  = rawWidth  / _unitsPerInch * 25.4;
             double heightMm = rawHeight / _unitsPerInch * 25.4;
 
-            // JSONのPaperWidth/PaperHeightはすでに表示向きの値
-            // Orientationによるswapは不要
-            PaperWidthMm  = widthMm;
-            PaperHeightMm = heightMm;
-            IsLandscape   = (Orientation == 2);
+            // ★ ActiveReportsのPaperWidth/HeightはOrientation関係なく縦向き基準で格納される
+            // Orientation=2(横)のときは必ずW/Hを入れ替える
+            IsLandscape = (Orientation == 2);
+            if (IsLandscape)
+            {
+                // 横向き：長辺をWidth、短辺をHeightに
+                PaperWidthMm  = Math.Max(widthMm, heightMm);
+                PaperHeightMm = Math.Min(widthMm, heightMm);
+            }
+            else
+            {
+                // 縦向き：そのまま
+                PaperWidthMm  = widthMm;
+                PaperHeightMm = heightMm;
+            }
 
             Debug.WriteLine($"Final PaperWidthMm = {PaperWidthMm}");
             Debug.WriteLine($"Final PaperHeightMm = {PaperHeightMm}");
@@ -1675,7 +1685,6 @@ public sealed class DesignerCanvasLogic
     // =========================================
     public void Render()
     {
-        Debug.WriteLine("Render logic hash = " + this.GetHashCode());
         ApplyPaperSize();
         _pageCanvas.Children.Clear();
         ClearSelection();
@@ -1692,14 +1701,18 @@ public sealed class DesignerCanvasLogic
             _pageCanvas.Children.Add(band);
             yPx += bandHeightPx;
         }
+        // ★ セクション合計高さでCanvas/Borderを確定（ApplyPaperSizeの値を上書き）
         _pageCanvas.Height = yPx;
         _pageBorder.Height = yPx;
+        // ★ 幅はPaper幅を維持（横方向はApplyPaperSizeの値を使う）
+        _pageCanvas.Width  = UnitConverter.MmToPx(PaperWidthMm - LeftMarginMm - RightMarginMm);
+        _pageBorder.Width  = UnitConverter.MmToPx(PaperWidthMm - LeftMarginMm - RightMarginMm);
+
         Canvas.SetLeft(_pageBorder, 0);
         Canvas.SetTop(_pageBorder, 0);
         UpdateOutlineTree();
         OutlineChanged?.Invoke(new List<OutlineNode>(_outlineCollection));
     }
-
     private Control CreateBand(SectionDefinition sec)
     {
         double printableWidthMm = PaperWidthMm - LeftMarginMm - RightMarginMm;
@@ -1822,6 +1835,17 @@ public sealed class DesignerCanvasLogic
         _pageCanvas.Width = pageWpx;
         _pageCanvas.Height = pageHpx;
     }
+    // ApplyPaperSize()の下に追加
+    public void ApplyPaperWidth()
+    {
+        double printableWidthMm = PaperWidthMm - LeftMarginMm - RightMarginMm;
+        double pageWpx = UnitConverter.MmToPx(printableWidthMm);
+        _pageBorder.Width  = pageWpx;
+        _pageCanvas.Width  = pageWpx;
+        // ★ Height は触らない
+    }
+
+
     public void UpdateControl(DesignControl ctrl)
     {
         if (!_viewMap.TryGetValue(ctrl, out var view)) return;
