@@ -13,9 +13,9 @@ public class AcrConfigModel
 {
     public string TemplateDir { get; set; } = "template";
     public string DataDir { get; set; } = "data";
-    public string PdfDir { get; set; } = @"Output\PDF";
-    public string PngDir { get; set; } = @"Output\PNG";
-    public string HtmlDir { get; set; } = @"Output\html";
+    public string PdfDir { get; set; } = "Output/PDF";
+    public string PngDir { get; set; } = "Output/PNG";
+    public string HtmlDir { get; set; } = "Output/html";
 }
 
 public static class AcrConfigService
