@@ -1,6 +1,6 @@
-﻿using AcrDesigner.Services;
+using AcrDesigner.Services;
 using AcrossReportDesigner.Resources;
-using Microsoft.VisualBasic;
+using Avalonia.Threading;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -10,24 +10,32 @@ namespace AcrossReportDesigner;
 
 public class LocalizationManager : INotifyPropertyChanged
 {
+    // ✅ シングルトン（App.axaml.cs でリソースに登録される唯一のインスタンス）
     public static LocalizationManager Instance { get; } = new();
 
     private ResourceManager _rm = new ResourceManager(
-        typeof(AcrossReportDesigner.Resources.Strings)); // 自動生成されたStrings.Designer.cs
+        typeof(AcrossReportDesigner.Resources.Strings));
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    // ✅ インデクサ（axaml の {Binding [Key]} で参照される）
     public string this[string key] =>
         _rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
 
     public void SwitchLanguage(string langCode)
     {
         CultureInfo.CurrentUICulture = new CultureInfo(langCode);
-        CultureInfo.CurrentCulture = new CultureInfo(langCode);
-        Debug.WriteLine($"[LANG] Switched to {langCode}, test key: {this["Toolbar_New"]}");
-        // 全バインディングに更新を通知
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
-        // 設定ファイルに保存
+        CultureInfo.CurrentCulture   = new CultureInfo(langCode);
+
+        Debug.WriteLine($"[LANG] Switched to {langCode} → Toolbar_New={this["Toolbar_New"]}");
+
+        // ✅ UIスレッドで PropertyChanged を発火
+        //    "Item[]" は Avalonia のインデクサバインディング更新トリガー
+        Dispatcher.UIThread.Post(() =>
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
+        });
+
         SettingsService.SaveLanguage(langCode);
     }
 }

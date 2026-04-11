@@ -2,7 +2,6 @@ using AcrDesigner.Services;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -16,15 +15,15 @@ namespace AcrossReportDesigner.ViewModels
 
     public class LanguagePanelViewModel : INotifyPropertyChanged
     {
+        // ✅ 日本語・英語のみサポート
         public ObservableCollection<LanguageItem> SupportedLanguages { get; } = new()
         {
             new LanguageItem { Code = "ja", DisplayName = "日本語" },
             new LanguageItem { Code = "en", DisplayName = "English" },
-            new LanguageItem { Code = "zh", DisplayName = "中文" },
-            new LanguageItem { Code = "ko", DisplayName = "한국어" },
         };
 
         private LanguageItem _selectedLanguage;
+        private bool _initialized = false;
 
         public LanguageItem SelectedLanguage
         {
@@ -34,20 +33,28 @@ namespace AcrossReportDesigner.ViewModels
                 if (_selectedLanguage == value) return;
                 _selectedLanguage = value;
                 OnPropertyChanged();
-                // UIスレッドが落ち着いてから切替
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    LocalizationManager.Instance.SwitchLanguage(value.Code);
-                });
+
+                if (!_initialized) return;
+
+                // ✅ 設定を保存してから再起動フローをリクエスト
+                SettingsService.SaveLanguage(value.Code);
+                RestartRequested?.Invoke(value.Code);
             }
         }
 
+        // ✅ MainWindow が購読して再起動フローを実行する
+        public event Action<string>? RestartRequested;
+
         public LanguagePanelViewModel()
         {
-            var current = SettingsService.LoadLanguage() ?? "ja";
+            var saved = SettingsService.LoadLanguage() ?? "ja";
             _selectedLanguage = SupportedLanguages
-                .FirstOrDefault(l => l.Code == current)
+                .FirstOrDefault(l => l.Code == saved)
                 ?? SupportedLanguages[0];
+
+            // 起動時のみ即時適用（ダイアログなし）
+            LocalizationManager.Instance.SwitchLanguage(_selectedLanguage.Code);
+            _initialized = true;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

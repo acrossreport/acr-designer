@@ -17,14 +17,14 @@
             Spacing="6"
             VerticalAlignment="Center">
 				<!-- テンプレート -->
-				<Button Content="テンプレート"
+				<Button Content="{Binding [Viewer_Template], Source={StaticResource Loc}}"
 						Width="70"
 						HorizontalContentAlignment="Center"
 						Click="BrowseTemplate_Click"/>
 				<TextBox x:Name="TemplatePathBox"
 						 Width="300"/>
 				<!-- データ -->
-				<Button Content="データ"
+				<Button Content="{Binding [Viewer_Data],     Source={StaticResource Loc}}"
 						Width="70"
 						HorizontalContentAlignment="Center"
 						Click="BrowseData_Click"/>
@@ -32,13 +32,13 @@
 						 Width="300"/>
 				<!-- 表示 -->
 				<Button x:Name="ShowButton"
-						Content="表示"
+						Content="{Binding [Viewer_Show],     Source={StaticResource Loc}}"
 						Width="70"
 						HorizontalContentAlignment="Center"
 						Click="Show_Click"/>
 				<!-- PDF＋フォント埋込 -->
 				<Button x:Name="PdfButton"
-						Content="PDF"
+						Content="{Binding [Viewer_PDF],      Source={StaticResource Loc}}"
 						Width="70"
 						HorizontalContentAlignment="Center"
 						Click="Pdf_Click"/>
@@ -46,17 +46,17 @@
 						  Width="90"
 						  SelectedIndex="0"
 						  HorizontalContentAlignment="Center">
-					<ComboBoxItem Content="組込ON"/>
-					<ComboBoxItem Content="組込OFF"/>
+					<ComboBoxItem Content="{Binding [Viewer_EmbedOn],  Source={StaticResource Loc}}"/>
+					<ComboBoxItem Content="{Binding [Viewer_EmbedOff], Source={StaticResource Loc}}"/>
 				</ComboBox>
 				<!-- HTML＋出力形式 -->
 				<Button x:Name="HtmlButton"
-						Content="HTML"
+						Content="{Binding [Viewer_HTML],     Source={StaticResource Loc}}"
 						Width="70"
 						HorizontalContentAlignment="Center"
 						Click="HtmlShow_Click"/>
 				<Button x:Name="HtmlSaveButton"
-						Content="保存"
+						Content="{Binding [Viewer_Save],     Source={StaticResource Loc}}"
 						Width="70"
 						HorizontalContentAlignment="Center"
 						Click="HtmlSave_Click"/>
@@ -64,9 +64,15 @@
 						  Width="90"
 						  SelectedIndex="0"
 						  HorizontalContentAlignment="Center">
-					<ComboBoxItem Content="画像埋込"/>
-					<ComboBoxItem Content="CSS形式"/>
+					<ComboBoxItem Content="{Binding [Viewer_ImageEmbed], Source={StaticResource Loc}}"/>
+					<ComboBoxItem Content="{Binding [Viewer_CssStyle], Source={StaticResource Loc}}"/>
 				</ComboBox>
+				<!-- 画像埋込 クリアボタン -->
+				<Button x:Name="HtmlModeClearButton"
+						Content="クリア"
+						Width="70"
+						HorizontalContentAlignment="Center"
+						Click="HtmlModeClear_Click"/>
 			</StackPanel>
 			<!-- =========================
                  2行目：FONT選択＋メッセージ（右端まで伸ばす）
@@ -78,14 +84,14 @@
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 				<TextBlock Grid.Column="0"
-                           Text="フォント"
+                           Text="{Binding [Viewer_Font],        Source={StaticResource Loc}}"
                            Margin="0,0,12,0"
                            VerticalAlignment="Center"/>
 				<ComboBox Grid.Column="1"
                           x:Name="FontComboBox"
                           Width="220"
                           SelectedIndex="0">
-					<ComboBoxItem Content="デフォルト"/>
+					<ComboBoxItem Content="{Binding [Viewer_FontDefault], Source={StaticResource Loc}}"/>
 					<ComboBoxItem Content="Noto 明朝"/>
 					<ComboBoxItem Content="Noto ゴシック"/>
 					<ComboBoxItem Content="Noto 太字明朝"/>

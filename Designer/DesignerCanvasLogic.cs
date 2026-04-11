@@ -1,4 +1,4 @@
-﻿using AcrossReportDesigner.Models;
+using AcrossReportDesigner.Models;
 using AcrossReportDesigner.Services;
 using AcrossReportDesigner.UndoRedo;
 using AcrossReportDesigner.Views;
@@ -30,7 +30,7 @@ public sealed class DesignerCanvasLogic
     private double _unitsPerInch = 1440.0; // fallback: twips
     private double UnitsPerMm => _unitsPerInch / 25.4;
     public List<OutlineNode> OutlineRoots { get; private set; } = new();
-    private readonly Dictionary<DesignControl, DesignControlView> _controlViewMap = new();
+    private readonly Dictionary<DesignControl, Control> _controlViewMap = new();
     private readonly ObservableCollection<OutlineNode> _outlineCollection = new();
     public ObservableCollection<OutlineNode> OutlineCollection => _outlineCollection;
     // =====================================================
@@ -98,7 +98,7 @@ public sealed class DesignerCanvasLogic
     public DesignControl? SelectedControl { get; private set; }
     public bool IsDrawingLine { get; set; }
     private Dictionary<string, object?>? _currentRow;
-    private readonly Dictionary<DesignControl, DesignControlView> _viewMap = new();
+    private readonly Dictionary<DesignControl, Control> _viewMap = new();  // ✅ Control基底に統一（Picture/Barcode対応）
     private double _pageWidthPx;
     private readonly List<DesignControl> _controls = new();
     // ✅ コンストラクタ
@@ -146,6 +146,9 @@ public sealed class DesignerCanvasLogic
         _sections.Clear();
         _pageCanvas.Children.Clear();
         _adornerMap.Clear();
+        _viewMap.Clear();
+        _controlViewMap.Clear();
+        _outlineCollection.Clear();   // ✅ TreeView ノードもクリア
         _sourceJsonNode = null;
         _rootKeyName = "";
         _undo.Clear();
@@ -297,17 +300,22 @@ public sealed class DesignerCanvasLogic
     public void ClearSelection()
     {
         Debug.WriteLine("LOGIC ClearSelection");
-        // =========================
-        // 選択解除
-        // =========================
-        SelectedControl = null;
-        // =========================
-        // adorner 全非表示
-        // =========================
-        foreach (var ad in _adornerMap.Values)
+
+        // ✅ 選択中コントロールの色を戻す
+        if (_currentSelected != null)
         {
-            ad.IsVisible = false;
+            if (_viewMap.TryGetValue(_currentSelected, out var oldView))
+            {
+                if (oldView is DesignControlView oldDcv)  oldDcv.SetSelected(false);
+                else if (oldView is PictureControlView oldPv) oldPv.SetSelected(false);
+                else if (oldView is BarcodeControlView oldBv) oldBv.SetSelected(false);
+            }
+            _currentSelected = null;
         }
+
+        SelectedControl = null;
+        foreach (var ad in _adornerMap.Values)
+            ad.IsVisible = false;
     }
     public List<SectionSnapshot> GetSectionsSnapshot()
     {
@@ -320,10 +328,30 @@ public sealed class DesignerCanvasLogic
     }
     public void SelectControl(DesignControl ctrl)
     {
+        // ✅ 前の選択を解除（色を戻す）
+        if (_currentSelected != null && _currentSelected != ctrl)
+        {
+            if (_viewMap.TryGetValue(_currentSelected, out var oldView))
+            {
+                if (oldView is DesignControlView oldDcv)  oldDcv.SetSelected(false);
+                else if (oldView is PictureControlView oldPv) oldPv.SetSelected(false);
+                else if (oldView is BarcodeControlView oldBv) oldBv.SetSelected(false);
+            }
+        }
+
         if (_currentSelected == ctrl) return;
         _currentSelected = ctrl;
         Debug.WriteLine("LOGIC SelectControl = " + ctrl.Name);
         SelectedControl = ctrl;
+
+        // ✅ 新しい選択を色付け
+        if (_viewMap.TryGetValue(ctrl, out var newView))
+        {
+            if (newView is DesignControlView newDcv)  newDcv.SetSelected(true);
+            else if (newView is PictureControlView newPv) newPv.SetSelected(true);
+            else if (newView is BarcodeControlView newBv) newBv.SetSelected(true);
+        }
+
         foreach (var ad in _adornerMap.Values)
             ad.IsVisible = false;
         if (_adornerMap.TryGetValue(ctrl, out var adorner))
@@ -397,7 +425,7 @@ public sealed class DesignerCanvasLogic
     {
         return px * 25.4 / Dpi;
     }
-    private DesignControlView? AddControlToCanvas(Canvas canvas, DesignControl ctrl)
+    private Control? AddControlToCanvas(Canvas canvas, DesignControl ctrl)
     {
         Debug.WriteLine($"AddControlToCanvas {ctrl.Type}");
         Debug.WriteLine($"DRAW {ctrl.Name} mm=({ctrl.LeftMm},{ctrl.TopMm})");
@@ -438,6 +466,52 @@ public sealed class DesignerCanvasLogic
             canvas.Children.Add(tableView);
             Debug.WriteLine($"FINAL PX TABLE {ctrl.Name} = ({x},{y})");
             return null;
+        }
+        // =========================
+        // Picture（AR: PictureBox互換）
+        // =========================
+        if (ctrl.Type == "Picture")
+        {
+            var picView = new PictureControlView(ctrl);
+            picView.Selected    += c => SelectControl(c);
+            picView.DragFinished += (c, oldRect, newRect) =>
+            {
+                if (!oldRect.EqualsApprox(newRect))
+                    ControlTransformed?.Invoke(c, oldRect, newRect);
+                ControlSelected?.Invoke(c);
+            };
+            _viewMap[ctrl] = picView;
+            Canvas.SetLeft(picView, x);
+            Canvas.SetTop(picView, y);
+            picView.Width  = UnitConverter.MmToPx(ctrl.WidthMm);
+            picView.Height = UnitConverter.MmToPx(ctrl.HeightMm);
+            picView.SetValue(Canvas.ZIndexProperty, ctrl.ZIndex);
+            canvas.Children.Add(picView);
+            Debug.WriteLine($"FINAL PX PICTURE {ctrl.Name} = ({x},{y})");
+            return picView;
+        }
+        // =========================
+        // Barcode（AR: Barcode互換）
+        // =========================
+        if (ctrl.Type == "Barcode")
+        {
+            var bcView = new BarcodeControlView(ctrl);
+            bcView.Selected    += c => SelectControl(c);
+            bcView.DragFinished += (c, oldRect, newRect) =>
+            {
+                if (!oldRect.EqualsApprox(newRect))
+                    ControlTransformed?.Invoke(c, oldRect, newRect);
+                ControlSelected?.Invoke(c);
+            };
+            _viewMap[ctrl] = bcView;
+            Canvas.SetLeft(bcView, x);
+            Canvas.SetTop(bcView, y);
+            bcView.Width  = UnitConverter.MmToPx(ctrl.WidthMm);
+            bcView.Height = UnitConverter.MmToPx(ctrl.HeightMm);
+            bcView.SetValue(Canvas.ZIndexProperty, ctrl.ZIndex);
+            canvas.Children.Add(bcView);
+            Debug.WriteLine($"FINAL PX BARCODE {ctrl.Name} = ({x},{y})");
+            return bcView;
         }
         // =========================
         // Normal Control
@@ -821,6 +895,29 @@ public sealed class DesignerCanvasLogic
         if (ctrl.Type.Contains("Shape") && cNode["BackColor"] == null)
             ctrl.BackStyle = 0;
 
+        // ======================================================
+        // ✅ Picture（AR: PictureBox互換）
+        // ======================================================
+        if (ctrl.Type == "Picture")
+        {
+            ctrl.ImagePath      = cNode["ImagePath"]?.ToString() ?? "";
+            ctrl.ImageDataField = cNode["DataField"]?.ToString() ?? "";
+            ctrl.SizeMode       = GetI(cNode, "SizeMode", 2);
+        }
+
+        // ======================================================
+        // ✅ Barcode（AR: Barcode互換）
+        // ======================================================
+        if (ctrl.Type == "Barcode")
+        {
+            ctrl.BarcodeType      = cNode["Symbology"]?.ToString() ?? "Code128";
+            ctrl.BarcodeValue     = cNode["Text"]?.ToString() ?? "1234567890";
+            ctrl.BarcodeDataField = cNode["DataField"]?.ToString() ?? "";
+            ctrl.BarcodeShowText  = (GetI(cNode, "ShowText", 1) != 0);
+            ctrl.BarColor         = GetI(cNode, "BarColor", 0x000000);
+            ctrl.QrErrorLevel     = cNode["QrErrorLevel"]?.ToString() ?? "M";
+        }
+
         return ctrl;
     }
     private void ParseStyle(DesignControl ctrl)
@@ -918,6 +1015,26 @@ public sealed class DesignerCanvasLogic
                     cDict["BackColor"] = ctrl.BackColor;
                     cDict["BackStyle"] = ctrl.BackStyle;
                     cDict["LineColor"] = ctrl.LineColor;
+                }
+                // ======================================================
+                // ✅ Picture（AR: PictureBox互換）
+                // ======================================================
+                if (ctrl.Type == "Picture")
+                {
+                    cDict["ImagePath"] = ctrl.ImagePath ?? "";
+                    cDict["SizeMode"]  = ctrl.SizeMode;
+                    // DataFieldはすでに共通で出力済み
+                }
+                // ======================================================
+                // ✅ Barcode（AR: Barcode互換）
+                // ======================================================
+                if (ctrl.Type == "Barcode")
+                {
+                    cDict["Symbology"]    = ctrl.BarcodeType;
+                    cDict["ShowText"]     = ctrl.BarcodeShowText ? 1 : 0;
+                    cDict["BarColor"]     = ctrl.BarColor;
+                    cDict["QrErrorLevel"] = ctrl.QrErrorLevel;
+                    // Text/DataField は共通で出力済み
                 }
                 controlList.Add(cDict);
             }
@@ -1091,7 +1208,9 @@ public sealed class DesignerCanvasLogic
     public void UpdateControlView(DesignControl ctrl)
     {
         if (!_viewMap.TryGetValue(ctrl, out var view)) return;
-        view.ApplyPosition();
+        if (view is DesignControlView dcv) dcv.ApplyPosition();
+        else if (view is PictureControlView pv) pv.ApplyPosition();
+        else if (view is BarcodeControlView bv) bv.ApplyPosition();
         UpdateAdorner(ctrl);
     }
     private JsonNode DetectRoot(JsonNode node)
@@ -1378,6 +1497,43 @@ public sealed class DesignerCanvasLogic
                 BackStyle = 1
             };
         }
+        // ======================================================
+        // ✅ Picture（AR: PictureBox互換）
+        // ======================================================
+        else if (tool == "Picture")
+        {
+            ctrl = new DesignControl
+            {
+                Type = "Picture",
+                Name = GenerateNextName("Picture"),
+                LeftMm = xMm,
+                TopMm = yMmInSection,
+                WidthMm = 30,
+                HeightMm = 20,
+                SizeMode = 2,       // Zoom
+                ImagePath = "",
+                ImageDataField = ""
+            };
+        }
+        // ======================================================
+        // ✅ Barcode（AR: Barcode互換）
+        // ======================================================
+        else if (tool == "Barcode")
+        {
+            ctrl = new DesignControl
+            {
+                Type = "Barcode",
+                Name = GenerateNextName("Barcode"),
+                LeftMm = xMm,
+                TopMm = yMmInSection,
+                WidthMm = 40,
+                HeightMm = 15,
+                BarcodeType = "Code128",
+                BarcodeValue = "1234567890",
+                BarcodeShowText = true,
+                BarColor = 0x000000
+            };
+        }
         else
         {
             Debug.WriteLine("UNKNOWN TOOL");
@@ -1614,11 +1770,11 @@ public sealed class DesignerCanvasLogic
     // =============================
     // View マップAPI
     // =============================
-    public bool TryGetView(DesignControl model, out DesignControlView view)
+    public bool TryGetView(DesignControl model, out Control view)
     {
         return _viewMap.TryGetValue(model, out view!);
     }
-    public void RegisterView(DesignControl model, DesignControlView view)
+    public void RegisterView(DesignControl model, Control view)
     {
         _viewMap[model] = view;
     }
@@ -1780,7 +1936,10 @@ public sealed class DesignerCanvasLogic
             var view = AddControlToCanvas(canvas, ctrl);
             if (view != null)
             {
-                view.GridMm = GridMm;  // ★null確認後に設定
+                // GridMm をキャスト対応で設定
+                if (view is DesignControlView dcvg)       dcvg.GridMm = GridMm;
+                else if (view is PictureControlView pvg)  pvg.GridMm  = GridMm;
+                else if (view is BarcodeControlView bvg)  bvg.GridMm  = GridMm;
                 _controlViewMap[ctrl] = view;
             }
         }
@@ -1788,8 +1947,107 @@ public sealed class DesignerCanvasLogic
         grid.Children.Add(canvas);
         bandRoot.Child = grid;
 
+        // ======================================================
+        // ✅ セクション高さ マウスドラッグ リサイズグリップ
+        // ======================================================
+        AttachSectionResizeGrip(bandRoot, capturedSec);
+
         return bandRoot;
     }
+
+    // ======================================================
+    // ✅ セクション高さ マウスドラッグ実装
+    //    バンド下端 8px をグリップとして扱う
+    // ======================================================
+    private void AttachSectionResizeGrip(Border bandRoot, SectionDefinition sec)
+    {
+        const double GripH  = 8.0;   // 下端グリップ領域の高さ(px)
+        const double MinPx  = 4.0;   // セクション最小高さ(px)
+
+        bool   resizing   = false;
+        double startY     = 0;
+        double startBodyH = 0;   // ドラッグ開始時のbody高さ(px)
+        double startMm    = 0;   // Undo用の開始HeightMm
+
+        // ---- カーソル切替 ----
+        bandRoot.PointerMoved += (s, e) =>
+        {
+            if (resizing) return;
+            var p = e.GetPosition(bandRoot);
+            bool onGrip = p.Y >= bandRoot.Bounds.Height - GripH;
+            bandRoot.Cursor = onGrip
+                ? new Cursor(StandardCursorType.SizeNorthSouth)
+                : new Cursor(StandardCursorType.Arrow);
+        };
+
+        // ---- ドラッグ開始 ----
+        bandRoot.PointerPressed += (s, e) =>
+        {
+            var p = e.GetPosition(bandRoot);
+            if (p.Y < bandRoot.Bounds.Height - GripH) return;  // グリップ外
+
+            resizing   = true;
+            startY     = e.GetPosition(_pageCanvas).Y;
+            startBodyH = bandRoot.Bounds.Height - HeaderPx;
+            startMm    = sec.HeightMm;
+
+            e.Pointer.Capture(bandRoot);
+            e.Handled = true;
+        };
+
+        // ---- ドラッグ中（リアルタイムプレビュー） ----
+        bandRoot.PointerMoved += (s, e) =>
+        {
+            if (!resizing) return;
+
+            double dy     = e.GetPosition(_pageCanvas).Y - startY;
+            double newBodyPx = Math.Max(MinPx, startBodyH + dy);
+            double newMm  = Math.Round(newBodyPx * 25.4 / 96.0, 1);
+
+            // バンド高さをリアルタイム更新（Render不要）
+            bandRoot.Height = HeaderPx + newBodyPx;
+
+            // ヘッダーテキストを更新
+            if (bandRoot.Child is Grid g &&
+                g.Children.Count > 0 &&
+                g.Children[0] is Border hdr &&
+                hdr.Child is TextBlock tb)
+            {
+                tb.Text = $"{sec.Name}  (H={newMm:0.#}mm)";
+            }
+
+            e.Handled = true;
+        };
+
+        // ---- ドラッグ確定 ----
+        bandRoot.PointerReleased += (s, e) =>
+        {
+            if (!resizing) return;
+            resizing = false;
+            e.Pointer.Capture(null);
+
+            double dy        = e.GetPosition(_pageCanvas).Y - startY;
+            double newBodyPx = Math.Max(MinPx, startBodyH + dy);
+            double newMm     = Math.Round(newBodyPx * 25.4 / 96.0, 1);
+            newMm = Math.Max(0.5, newMm);
+
+            if (Math.Abs(newMm - startMm) < 0.05) return;  // ほぼ変化なし
+
+            // ★ モデル確定 → Render
+            sec.HeightMm = newMm;
+            Render();
+
+            // ★ SectionHeightChanged イベントでView側にUndoを登録させる
+            SectionHeightChanged?.Invoke(sec, startMm, newMm);
+
+            e.Handled = true;
+        };
+    }
+
+    // ======================================================
+    // ✅ セクション高さ変更通知（View側でUndo登録）
+    // ======================================================
+    public event Action<SectionDefinition, double, double>? SectionHeightChanged;
     private void BindSectionData(SectionDefinition section, Dictionary<string, object> row)
     {
         foreach (var ctrl in section.Controls)
@@ -1810,9 +2068,9 @@ public sealed class DesignerCanvasLogic
             // =========================
             // View更新（←ここ重要）
             // =========================
-            if (_controlViewMap.TryGetValue(ctrl, out var view))
+            if (_controlViewMap.TryGetValue(ctrl, out var cvView))
             {
-                view.UpdateText();
+                if (cvView is DesignControlView dcv2) dcv2.UpdateText();
             }
         }
     }
@@ -1841,7 +2099,9 @@ public sealed class DesignerCanvasLogic
     public void UpdateControl(DesignControl ctrl)
     {
         if (!_viewMap.TryGetValue(ctrl, out var view)) return;
-        view.RefreshFromModel();
+        if (view is DesignControlView dcv) dcv.RefreshFromModel();
+        else if (view is PictureControlView pv) pv.RefreshFromModel();
+        else if (view is BarcodeControlView bv) bv.RefreshFromModel();
     }
     private void UpdateOutlineTree()
     {

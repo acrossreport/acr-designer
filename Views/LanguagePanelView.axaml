@@ -2,7 +2,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="AcrossReportDesigner.Views.LanguagePanelView">
-	
+
 	<StackPanel Margin="8" Spacing="8">
 
 		<!-- タイトル -->
@@ -10,11 +10,7 @@
                    Source={StaticResource Loc}}"
                    FontWeight="Bold" />
 
-		<Separator />
-
-		<!-- 言語選択コンボボックス -->
-		<TextBlock Text="{Binding [Lang_Preview],
-                   Source={StaticResource Loc}}" />
+		<!-- 言語選択コンボボックス（Separator・ラベル削除） -->
 		<ComboBox ItemsSource="{Binding SupportedLanguages}"
                   SelectedItem="{Binding SelectedLanguage}"
                   HorizontalAlignment="Stretch">

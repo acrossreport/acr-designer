@@ -1,10 +1,12 @@
-﻿using AcrossReportDesigner.Designer;
+using AcrossReportDesigner;
+using AcrossReportDesigner.Designer;
 using AcrossReportDesigner.Models;
 using AcrossReportDesigner.Services;
 using AcrossReportDesigner.UndoRedo;
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -18,6 +20,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AcrossReportDesigner.ViewModels;
+using System.Globalization;
 
 namespace AcrossReportDesigner.Views;
 
@@ -54,6 +58,9 @@ public partial class DesignerView : UserControl
     public string Name { get; set; } = "Group";
     public List<DesignControl> Controls { get; } = new();
     private readonly UndoRedoManager _undo = new();
+
+    // ✅ 言語切り替え再起動リクエスト（MainWindow が購読）
+    public event Action<string>? RestartRequested;
     private bool _drawingLine;
     private Point _lineStartPx;
     private Avalonia.Controls.Shapes.Line? _previewLine;
@@ -68,7 +75,9 @@ public partial class DesignerView : UserControl
         Label,
         TextBox,
         Line,
-        Shape
+        Shape,
+        Picture,   // ✅ AR: PictureBox互換
+        Barcode    // ✅ AR: Barcode互換
     }
     // 用紙向き
     private bool _isLandscape = false;
@@ -123,31 +132,34 @@ public partial class DesignerView : UserControl
         Tree.ItemsSource = _logic.OutlineCollection;
         _logic.OutlineChanged += roots =>
         {
+            // ✅ Render 優先度で展開（Background より後 → TreeViewItem Realize 後に実行）
             Dispatcher.UIThread.Post(() =>
             {
                 ExpandAllNodes(_logic.OutlineCollection);
-            }, DispatcherPriority.Background);
+            }, DispatcherPriority.Render);
+        };
+        // ✅ セクション高さドラッグ変更 → Undo登録
+        _logic.SectionHeightChanged += (sec, oldMm, newMm) =>
+        {
+            _undo.Execute(new UndoRedo.PropertyChangeCommand(
+                redo: () => { sec.HeightMm = newMm; _logic?.Render(); },
+                undo: () => { sec.HeightMm = oldMm; _logic?.Render(); }
+            ));
+            // プロパティパネルを最新値に更新
+            ShowSectionProperties(sec);
         };
         _logic.SectionClicked += sec =>
         {
             ShowSectionProperties(sec);
-            // TreeViewでも該当セクションノードを選択
-            if (Tree.ItemsSource is IEnumerable<OutlineNode> roots)
-            {
-                foreach (var r in roots)
-                {
-                    var node = FindNodeByTarget(r, sec);
-                    if (node != null)
-                    {
-                        _selectionChanging = true;
-                        Tree.SelectedItem = node;
-                        _selectionChanging = false;
-                        break;
-                    }
-                }
-            }
+            // ✅ TreeView：該当セクションノードを選択・展開・スクロール・フォーカス
+            SyncTreeSelectionAndFocusSection(sec);
         };
-        NewButton.Click += New_Click;
+        NewButton.Click  += New_Click;
+        UndoButton.Click += (_, _) => { _undo.Undo(); _logic?.Render(); RefreshAfterUndo(); };
+        RedoButton.Click += (_, _) => { _undo.Redo(); _logic?.Render(); RefreshAfterUndo(); };
+
+        // ✅ Undo/Redo スタック変化 → ボタン有効化を更新
+        _undo.StateChanged += UpdateUndoButtons;
         ClearButton.Click += Clear_Click;
         LoadButton.Click += Load_Click;
         SaveButton.Click += Save_Click;
@@ -164,6 +176,8 @@ public partial class DesignerView : UserControl
         WireToolButton(ToolTextButton,   ToolText_Click);
         WireToolButton(ToolLineButton,   ToolLine_Click);
         WireToolButton(ToolShapeButton,  ToolShape_Click);
+        WireToolButton(ToolPictureButton, ToolPicture_Click);  // ✅ 画像
+        WireToolButton(ToolBarcodeButton, ToolBarcode_Click);  // ✅ バーコード
         // =====================
         // ポインターキャプチャ方式：UserControl全体で追跡
         // =====================
@@ -211,6 +225,8 @@ public partial class DesignerView : UserControl
         this.KeyDown += OnKeyDown;
         _pageReady = false;
         UpdateUIEnabled();
+
+        // Multilingual は MainWindow のメニューバーに配置済み
     }
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
@@ -218,6 +234,7 @@ public partial class DesignerView : UserControl
         {
             _undo.Undo();
             _logic?.Render();
+            RefreshAfterUndo();
             e.Handled = true;
             return;
         }
@@ -225,6 +242,7 @@ public partial class DesignerView : UserControl
         {
             _undo.Redo();
             _logic?.Render();
+            RefreshAfterUndo();
             e.Handled = true;
             return;
         }
@@ -349,7 +367,7 @@ public partial class DesignerView : UserControl
         // ★Canvas背景のみ
         if (!ReferenceEquals(e.Source, PageCanvas))
             return;
-        _currentTool = ToolType.None;
+        ClearActiveTool();
         _logic?.ClearSelection();
     }
     private void GridCombo_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -418,13 +436,9 @@ public partial class DesignerView : UserControl
 
             Dispatcher.UIThread.Post(() =>
             {
-                SyncTreeSelection(ctrl);
                 ShowProperties(ctrl);
-                TopLevel.GetTopLevel(this)?
-                    .FocusManager?
-                    .ClearFocus();
-
-                PageCanvas.Focus();
+                // ✅ TreeView 展開・選択・フォーカスは専用メソッドへ
+                SyncTreeSelectionAndFocus(ctrl);
             });
         }
         finally
@@ -498,6 +512,9 @@ public partial class DesignerView : UserControl
         {
             case SectionDefinition sec:
                 ShowSectionProperties(sec);
+                // ✅ コントロールがあれば子ノードを展開
+                if (sec.Controls.Count > 0)
+                    node.IsExpanded = true;
                 break;
 
             case DesignControl ctrl:
@@ -515,10 +532,11 @@ public partial class DesignerView : UserControl
         PropertyRows.Add(new PropertyRow("Kind", sec.Kind.ToString(), false));
 
         // Height：編集可能でロジックに即時反映
-        var heightRow = new PropertyRow("Height (mm)", sec.HeightMm.ToString("0.###"), true, "numeric");
+        var heightRow = new PropertyRow("Height (mm)", sec.HeightMm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
         heightRow.ApplyWithOldNew = (oldS, newS) =>
         {
-            if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+            if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o)) return;
+            if (!double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
             if (Math.Abs(o - n) < 0.001) return;
             _undo.Execute(new UndoRedo.PropertyChangeCommand(
                 redo: () => { sec.HeightMm = n; _logic?.Render(); },
@@ -575,12 +593,14 @@ public partial class DesignerView : UserControl
     // =========================================================
     // ✅ 新規・クリア・ロード・保存
     // =========================================================
-    private void New_Click(object? sender, RoutedEventArgs e)
+    private async void New_Click(object? sender, RoutedEventArgs e)
     {
         NewButton.IsEnabled = false;
         LoadButton.IsEnabled = false;
         EnableEditing();
         ApplyNewDefaultUI();
+        // ✅ 新規後：展開 → Page ノードにフォーカス
+        await FocusAndExpandTree();
     }
     private void ApplyNewDefaultUI()
     {
@@ -641,6 +661,7 @@ public partial class DesignerView : UserControl
     private void ClearCanvas()
     {
         _logic?.Clear();
+        _undo.Clear();  // ✅ クリア時はUndoスタックもリセット
         MarginTopBox.Value = 1.00m;
         MarginBottomBox.Value = 1.00m;
         MarginLeftBox.Value = 1.00m;
@@ -651,12 +672,18 @@ public partial class DesignerView : UserControl
             _logic.GridMm = 1;
         }
         GridCombo.SelectedIndex = 0;
+        // ✅ OutlineCollection をクリアしてから ItemsSource を再セット
+        //    null にしたままにすると次回ロード時に TreeView が壊れる
+        _logic?.OutlineCollection.Clear();
         Tree.ItemsSource = null;
+        Tree.ItemsSource = _logic?.OutlineCollection;
         _selection?.Clear();
         _currentSection = null;
         _pageSelected = false;
         _pageReady = false;
         UpdateUIEnabled();
+
+        // Multilingual は MainWindow のメニューバーに配置済み
     }
     private async void Load_Click(object? sender, RoutedEventArgs e)
     {
@@ -722,6 +749,9 @@ public partial class DesignerView : UserControl
         // ★ ロード中フラグON
         // -----------------------------
         _isLoading = true;
+        // ✅ ロード前に ItemsSource を確実に OutlineCollection に接続
+        if (!ReferenceEquals(Tree.ItemsSource, _logic.OutlineCollection))
+            Tree.ItemsSource = _logic.OutlineCollection;
         _logic.SetJsonFromString(json);
         _logic.Render();
         SyncPageSettingsFromLogic();
@@ -732,6 +762,9 @@ public partial class DesignerView : UserControl
         _pageReady = true;
         UpdateUIEnabled();
         LoadButton.IsEnabled = false;
+
+        // ✅ ロード後：展開 → Page ノードにフォーカス
+        await FocusAndExpandTree();
     }
     private async void Save_Click(object? sender, RoutedEventArgs e)
     {
@@ -841,7 +874,7 @@ public partial class DesignerView : UserControl
             _logic.Render();
             var c = _logic.GetLastAddedControl();
             if (c != null) { _logic.SelectControl(c); ShowProperties(c); }
-            _currentTool = ToolType.None;
+            ClearActiveTool();
             e.Handled = true;
             return;
         }
@@ -851,7 +884,7 @@ public partial class DesignerView : UserControl
             _logic.Render();
             var c = _logic.GetLastAddedControl();
             if (c != null) { _logic.SelectControl(c); ShowProperties(c); }
-            _currentTool = ToolType.None;
+            ClearActiveTool();
             e.Handled = true;
             return;
         }
@@ -861,7 +894,29 @@ public partial class DesignerView : UserControl
             _logic.Render();
             var c = _logic.GetLastAddedControl();
             if (c != null) { _logic.SelectControl(c); ShowProperties(c); }
-            _currentTool = ToolType.None;
+            ClearActiveTool();
+            e.Handled = true;
+            return;
+        }
+        // ✅ Picture（AR: PictureBox互換）
+        if (_currentTool == ToolType.Picture)
+        {
+            _logic.CreateControlFromTool("Picture", pPage.X, pPage.Y);
+            _logic.Render();
+            var c = _logic.GetLastAddedControl();
+            if (c != null) { _logic.SelectControl(c); ShowProperties(c); }
+            ClearActiveTool();
+            e.Handled = true;
+            return;
+        }
+        // ✅ Barcode（AR: Barcode互換）
+        if (_currentTool == ToolType.Barcode)
+        {
+            _logic.CreateControlFromTool("Barcode", pPage.X, pPage.Y);
+            _logic.Render();
+            var c = _logic.GetLastAddedControl();
+            if (c != null) { _logic.SelectControl(c); ShowProperties(c); }
+            ClearActiveTool();
             e.Handled = true;
             return;
         }
@@ -1007,7 +1062,7 @@ public partial class DesignerView : UserControl
         _logic.Render();
         ShowProperties(ctrl);
         e.Handled = true;
-        _currentTool = ToolType.None;
+        ClearActiveTool();
     }
     private void MoveToFront()
     {
@@ -1153,7 +1208,7 @@ public partial class DesignerView : UserControl
             ShowProperties(newCtrl);
         }
 
-        _currentTool = ToolType.None;
+        ClearActiveTool();
     }
 
     private void RemoveToolGhost()
@@ -1163,24 +1218,31 @@ public partial class DesignerView : UserControl
         _toolGhost = null;
     }
     private void ToolLabel_Click(object? sender, RoutedEventArgs e)
-    {
-        _currentTool = ToolType.Label;
-        Debug.WriteLine("TOOL = Label");
-    }
+        => SetActiveTool(ToolType.Label,   ToolLabelButton.Content?.ToString() ?? "");
     private void ToolText_Click(object? sender, RoutedEventArgs e)
-    {
-        _currentTool = ToolType.TextBox;
-        Debug.WriteLine("TOOL = TextBox");
-    }
+        => SetActiveTool(ToolType.TextBox, ToolTextButton.Content?.ToString() ?? "");
     private void ToolLine_Click(object? sender, RoutedEventArgs e)
-    {
-        _currentTool = ToolType.Line;
-        Debug.WriteLine("TOOL = Line");
-    }
+        => SetActiveTool(ToolType.Line,    ToolLineButton.Content?.ToString() ?? "");
     private void ToolShape_Click(object? sender, RoutedEventArgs e)
+        => SetActiveTool(ToolType.Shape,   ToolShapeButton.Content?.ToString() ?? "");
+    private void ToolPicture_Click(object? sender, RoutedEventArgs e)
+        => SetActiveTool(ToolType.Picture, ToolPictureButton.Content?.ToString() ?? "");
+    private void ToolBarcode_Click(object? sender, RoutedEventArgs e)
+        => SetActiveTool(ToolType.Barcode, ToolBarcodeButton.Content?.ToString() ?? "");
+
+    // ✅ アクティブツールをセットして表示を更新
+    private void SetActiveTool(ToolType tool, string label)
     {
-        _currentTool = ToolType.Shape;
-        Debug.WriteLine("TOOL = Shape");
+        _currentTool = tool;
+        ActiveToolText.Text = $"[ {label} ]";
+        Debug.WriteLine($"TOOL = {tool}");
+    }
+
+    // ✅ ツール選択解除時も表示をクリア
+    private void ClearActiveTool()
+    {
+        _currentTool = ToolType.None;
+        ActiveToolText.Text = "";
     }
     private void BringFront(DesignControl? ctrl)
     {
@@ -1330,31 +1392,102 @@ public partial class DesignerView : UserControl
                 ExpandAllNodes(n.Children);
         }
     }
-    private void SyncTreeSelection(DesignControl ctrl)
+    // ======================================================
+    // ✅ セクションクリック時：TreeView 選択・展開・スクロール・フォーカス
+    // ======================================================
+    private void SyncTreeSelectionAndFocusSection(SectionDefinition sec)
     {
         if (Tree.ItemsSource is not IEnumerable<OutlineNode> roots) return;
+
+        // ① 全ノード展開
         ExpandAllNodes(roots);
 
-        OutlineNode? hitNode = null;
+        // ② 対象セクションノードを探す
+        OutlineNode? secNode = null;
         foreach (var r in roots)
         {
-            hitNode = FindNodeByControl(r, ctrl);
-            if (hitNode != null) break;
+            secNode = FindNodeByTarget(r, sec);
+            if (secNode != null) break;
         }
-        if (hitNode == null) return;
+        if (secNode == null) return;
 
-        if (ReferenceEquals(Tree.SelectedItem, hitNode)) return;
+        // ③ コントロールがあれば子ノードも展開
+        if (sec.Controls.Count > 0)
+            secNode.IsExpanded = true;
+
+        // ④ 選択セット
         _selectionChanging = true;
         try
         {
-            Tree.SelectedItem = hitNode;
-            // ★追加：選択ノードをスクロールして表示
-            Tree.ScrollIntoView(hitNode);
+            Tree.SelectedItem = secNode;
         }
         finally
         {
             _selectionChanging = false;
         }
+
+        // ⑤ ScrollIntoView + Tree フォーカスを Render 後に実行
+        var target = secNode;
+        Dispatcher.UIThread.Post(() =>
+        {
+            Tree.ScrollIntoView(target);
+            Tree.Focus();
+        }, DispatcherPriority.Render);
+    }
+
+    private void SyncTreeSelection(DesignControl ctrl)
+        => SyncTreeSelectionAndFocus(ctrl);
+
+    private void SyncTreeSelectionAndFocus(DesignControl ctrl)
+    {
+        // ✅ async で呼ぶ（TreeViewItem の Realize を待つため）
+        _ = SyncTreeSelectionAndFocusAsync(ctrl);
+    }
+
+    private async Task SyncTreeSelectionAndFocusAsync(DesignControl ctrl)
+    {
+        if (Tree.ItemsSource is not IEnumerable<OutlineNode> roots) return;
+
+        // ① 対象ノードを探す
+        OutlineNode? hitNode   = null;
+        OutlineNode? parentSec = null;
+        OutlineNode? pageNode  = null;
+
+        foreach (var r in roots)
+        {
+            if (r.Type != "Page") continue;
+            pageNode = r;
+
+            foreach (var sec in r.Children)
+            {
+                var found = FindNodeByControl(sec, ctrl);
+                if (found == null) continue;
+                hitNode   = found;
+                parentSec = sec;
+                break;
+            }
+            if (hitNode != null) break;
+        }
+        if (hitNode == null) return;
+
+        // ② Page・親セクションを展開（IsExpanded バインディングで TreeViewItem に反映）
+        if (pageNode != null)  pageNode.IsExpanded  = true;
+        if (parentSec != null) parentSec.IsExpanded = true;
+
+        // ③ TreeViewItem の Realize を待つ
+        await Task.Delay(60);
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            // ④ 選択セット
+            _selectionChanging = true;
+            try { Tree.SelectedItem = hitNode; }
+            finally { _selectionChanging = false; }
+
+            // ⑤ ScrollIntoView + フォーカス
+            Tree.ScrollIntoView(hitNode);
+            Tree.Focus();
+        }, DispatcherPriority.Render);
     }
     private OutlineNode? FindNode(OutlineNode n, object target)
     {
@@ -1595,10 +1728,10 @@ public partial class DesignerView : UserControl
         PropertyRows.Add(nameRow);
 
         // Left
-        var leftRow = new PropertyRow("Left", ctrl.LeftMm.ToString("0.###"), true, "numeric");
+        var leftRow = new PropertyRow("Left", ctrl.LeftMm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
         leftRow.ApplyWithOldNew = (oldS, newS) =>
         {
-            if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+            if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
             if (Math.Abs(o - n) < 0.0001) return;
             _undo.Execute(new PropertyChangeCommand(
                 redo: () => { ctrl.LeftMm = n; _logic?.UpdateControl(ctrl); },
@@ -1608,10 +1741,10 @@ public partial class DesignerView : UserControl
         PropertyRows.Add(leftRow);
 
         // Top
-        var topRow = new PropertyRow("Top", ctrl.TopMm.ToString("0.###"), true, "numeric");
+        var topRow = new PropertyRow("Top", ctrl.TopMm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
         topRow.ApplyWithOldNew = (oldS, newS) =>
         {
-            if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+            if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
             if (Math.Abs(o - n) < 0.0001) return;
             _undo.Execute(new PropertyChangeCommand(
                 redo: () => { ctrl.TopMm = n; _logic?.UpdateControl(ctrl); },
@@ -1621,10 +1754,10 @@ public partial class DesignerView : UserControl
         PropertyRows.Add(topRow);
 
         // Width
-        var widthRow = new PropertyRow("Width", ctrl.WidthMm.ToString("0.###"), true, "numeric");
+        var widthRow = new PropertyRow("Width", ctrl.WidthMm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
         widthRow.ApplyWithOldNew = (oldS, newS) =>
         {
-            if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+            if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
             if (Math.Abs(o - n) < 0.0001) return;
             _undo.Execute(new PropertyChangeCommand(
                 redo: () => { ctrl.WidthMm = n; _logic?.UpdateControl(ctrl); },
@@ -1633,10 +1766,10 @@ public partial class DesignerView : UserControl
         };
         PropertyRows.Add(widthRow);
         // Height
-        var heightRow = new PropertyRow("Height", ctrl.HeightMm.ToString("0.###"), true, "numeric");
+        var heightRow = new PropertyRow("Height", ctrl.HeightMm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
         heightRow.ApplyWithOldNew = (oldS, newS) =>
         {
-            if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+            if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
             if (Math.Abs(o - n) < 0.0001) return;
             _undo.Execute(new PropertyChangeCommand(
                 redo: () => { ctrl.HeightMm = n; _logic?.UpdateControl(ctrl); },
@@ -1787,10 +1920,10 @@ public partial class DesignerView : UserControl
             PropertyRows.Add(lineColorRow);
 
             // LineWidth
-            var lineWidthRow = new PropertyRow("LineWidth", ctrl.LineWidth.ToString("0.###"), true, "numeric");
+            var lineWidthRow = new PropertyRow("LineWidth", ctrl.LineWidth.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
             lineWidthRow.ApplyWithOldNew = (oldS, newS) =>
             {
-                if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+                if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
                 if (Math.Abs(o - n) < 0.0001) return;
                 _undo.Execute(new PropertyChangeCommand(
                     redo: () => { ctrl.LineWidth = n; _logic?.UpdateControl(ctrl); },
@@ -1860,7 +1993,7 @@ public partial class DesignerView : UserControl
             };
             PropertyRows.Add(fontFamilyRow);
             // FontSize
-            var fontSizeRow = new PropertyRow("FontSize", ctrl.FontSizePt.ToString("0.#"), true, "numeric");
+            var fontSizeRow = new PropertyRow("FontSize", ctrl.FontSizePt.ToString("0.#", CultureInfo.InvariantCulture), true, "numeric");
             fontSizeRow.ApplyWithOldNew = (oldS, newS) =>
             {
                 if (!double.TryParse(oldS, out var oldV)) return;
@@ -1900,50 +2033,50 @@ public partial class DesignerView : UserControl
         // =========================
         if (ctrl.Type == "Line")
         {
-            var x1Row = new PropertyRow("X1 (mm)", ctrl.X1Mm.ToString("0.###"), true, "numeric");
+            var x1Row = new PropertyRow("X1 (mm)", ctrl.X1Mm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
             x1Row.ApplyWithOldNew = (oldS, newS) =>
             {
-                if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+                if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
                 _undo.Execute(new PropertyChangeCommand(
                     redo: () => { ctrl.X1Mm = n; RequestRender(); },
                     undo: () => { ctrl.X1Mm = o; RequestRender(); }));
             };
             PropertyRows.Add(x1Row);
 
-            var y1Row = new PropertyRow("Y1 (mm)", ctrl.Y1Mm.ToString("0.###"), true, "numeric");
+            var y1Row = new PropertyRow("Y1 (mm)", ctrl.Y1Mm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
             y1Row.ApplyWithOldNew = (oldS, newS) =>
             {
-                if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+                if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
                 _undo.Execute(new PropertyChangeCommand(
                     redo: () => { ctrl.Y1Mm = n; RequestRender(); },
                     undo: () => { ctrl.Y1Mm = o; RequestRender(); }));
             };
             PropertyRows.Add(y1Row);
 
-            var x2Row = new PropertyRow("X2 (mm)", ctrl.X2Mm.ToString("0.###"), true, "numeric");
+            var x2Row = new PropertyRow("X2 (mm)", ctrl.X2Mm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
             x2Row.ApplyWithOldNew = (oldS, newS) =>
             {
-                if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+                if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
                 _undo.Execute(new PropertyChangeCommand(
                     redo: () => { ctrl.X2Mm = n; RequestRender(); },
                     undo: () => { ctrl.X2Mm = o; RequestRender(); }));
             };
             PropertyRows.Add(x2Row);
 
-            var y2Row = new PropertyRow("Y2 (mm)", ctrl.Y2Mm.ToString("0.###"), true, "numeric");
+            var y2Row = new PropertyRow("Y2 (mm)", ctrl.Y2Mm.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
             y2Row.ApplyWithOldNew = (oldS, newS) =>
             {
-                if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+                if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
                 _undo.Execute(new PropertyChangeCommand(
                     redo: () => { ctrl.Y2Mm = n; RequestRender(); },
                     undo: () => { ctrl.Y2Mm = o; RequestRender(); }));
             };
             PropertyRows.Add(y2Row);
 
-            var lwRow = new PropertyRow("LineWidth", ctrl.LineWidth.ToString("0.###"), true, "numeric");
+            var lwRow = new PropertyRow("LineWidth", ctrl.LineWidth.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
             lwRow.ApplyWithOldNew = (oldS, newS) =>
             {
-                if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+                if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
                 _undo.Execute(new PropertyChangeCommand(
                     redo: () => { ctrl.LineWidth = n; RequestRender(); },
                     undo: () => { ctrl.LineWidth = o; RequestRender(); }));
@@ -1965,10 +2098,10 @@ public partial class DesignerView : UserControl
             };
             PropertyRows.Add(backStyleRow);
 
-            var radiusRow = new PropertyRow("Radius (mm)", ctrl.RoundingRadius.ToString("0.###"), true, "numeric");
+            var radiusRow = new PropertyRow("Radius (mm)", ctrl.RoundingRadius.ToString("0.###", CultureInfo.InvariantCulture), true, "numeric");
             radiusRow.ApplyWithOldNew = (oldS, newS) =>
             {
-                if (!double.TryParse(oldS, out var o) || !double.TryParse(newS, out var n)) return;
+                if (!double.TryParse(oldS, NumberStyles.Any, CultureInfo.InvariantCulture, out var o) || !double.TryParse(newS, NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) return;
                 _undo.Execute(new PropertyChangeCommand(
                     redo: () => { ctrl.RoundingRadius = n; RequestRender(); },
                     undo: () => { ctrl.RoundingRadius = o; RequestRender(); }));
@@ -1989,7 +2122,292 @@ public partial class DesignerView : UserControl
             };
             PropertyRows.Add(dataFieldRow);
         }
+
+        // ======================================================
+        // ✅ Picture系プロパティ（AR: PictureBox互換）
+        // ======================================================
+        if (ctrl.Type == "Picture")
+        {
+            // ImagePath
+            var imgPathRow = new PropertyRow("ImagePath", ctrl.ImagePath ?? "", true);
+            imgPathRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (oldS == newS) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.ImagePath = newS; _logic?.Render(); },
+                    undo: () => { ctrl.ImagePath = oldS; _logic?.Render(); }
+                ));
+            };
+            PropertyRows.Add(imgPathRow);
+
+            // SizeMode（AR互換: 0=Clip, 1=Stretch, 2=Zoom, 3=Center）
+            var sizeModeRow = new PropertyRow(
+                "SizeMode", ctrl.SizeMode.ToString(), true, "combo",
+                new[] { "0", "1", "2", "3" });
+            sizeModeRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (!int.TryParse(oldS, out var o) || !int.TryParse(newS, out var n)) return;
+                if (o == n) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.SizeMode = n; _logic?.Render(); },
+                    undo: () => { ctrl.SizeMode = o; _logic?.Render(); }
+                ));
+            };
+            PropertyRows.Add(sizeModeRow);
+
+            // ImageDataField（実行時バインド用）
+            var imgDfRow = new PropertyRow("ImageDataField", ctrl.ImageDataField ?? "", true);
+            imgDfRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (oldS == newS) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.ImageDataField = newS; },
+                    undo: () => { ctrl.ImageDataField = oldS; }
+                ));
+            };
+            PropertyRows.Add(imgDfRow);
+        }
+
+        // ======================================================
+        // ✅ Barcode系プロパティ（AR: Barcode互換）
+        // ======================================================
+        if (ctrl.Type == "Barcode")
+        {
+            // Symbology（AR互換バーコード種別）
+            var bcTypeRow = new PropertyRow(
+                "Symbology", ctrl.BarcodeType, true, "combo",
+                new[] { "Code39", "Code128", "QRCode", "JAN13", "EAN8", "NW7", "ITF", "PDF417", "DataMatrix" });
+            bcTypeRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (oldS == newS) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.BarcodeType = newS; _logic?.Render(); },
+                    undo: () => { ctrl.BarcodeType = oldS; _logic?.Render(); }
+                ));
+            };
+            PropertyRows.Add(bcTypeRow);
+
+            // Value（固定バーコード値）
+            var bcValRow = new PropertyRow("Value", ctrl.BarcodeValue, true);
+            bcValRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (oldS == newS) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.BarcodeValue = newS; _logic?.Render(); },
+                    undo: () => { ctrl.BarcodeValue = oldS; _logic?.Render(); }
+                ));
+            };
+            PropertyRows.Add(bcValRow);
+
+            // BarcodeDataField（実行時バインド）
+            var bcDfRow = new PropertyRow("BarcodeDataField", ctrl.BarcodeDataField ?? "", true);
+            bcDfRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (oldS == newS) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.BarcodeDataField = newS; },
+                    undo: () => { ctrl.BarcodeDataField = oldS; }
+                ));
+            };
+            PropertyRows.Add(bcDfRow);
+
+            // ShowText（AR互換: バーコード下テキスト表示）
+            var bcShowRow = new PropertyRow("ShowText", ctrl.BarcodeShowText.ToString(), true, "checkbox");
+            bcShowRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                bool o = oldS == "True"; bool n = newS == "True";
+                if (o == n) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.BarcodeShowText = n; _logic?.Render(); },
+                    undo: () => { ctrl.BarcodeShowText = o; _logic?.Render(); }
+                ));
+            };
+            PropertyRows.Add(bcShowRow);
+
+            // BarColor（AR互換: バー色 OLE色）
+            var barColorRow = new PropertyRow(
+                "BarColor",
+                ctrl.BarColor.ToString("X6").PadLeft(6, '0'),
+                true);
+            barColorRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (!int.TryParse(newS.TrimStart('#'),
+                    System.Globalization.NumberStyles.HexNumber, null, out var n)) return;
+                if (!int.TryParse(oldS.TrimStart('#'),
+                    System.Globalization.NumberStyles.HexNumber, null, out var o)) return;
+                if (o == n) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.BarColor = n; _logic?.Render(); },
+                    undo: () => { ctrl.BarColor = o; _logic?.Render(); }
+                ));
+            };
+            PropertyRows.Add(barColorRow);
+
+            // QrErrorLevel（QRCode専用）
+            var qrLvlRow = new PropertyRow(
+                "QrErrorLevel", ctrl.QrErrorLevel, true, "combo",
+                new[] { "L", "M", "Q", "H" });
+            qrLvlRow.ApplyWithOldNew = (oldS, newS) =>
+            {
+                if (oldS == newS) return;
+                _undo.Execute(new PropertyChangeCommand(
+                    redo: () => { ctrl.QrErrorLevel = newS; _logic?.Render(); },
+                    undo: () => { ctrl.QrErrorLevel = oldS; _logic?.Render(); }
+                ));
+            };
+            PropertyRows.Add(qrLvlRow);
+        }
     }
+    // ======================================================
+    // ✅ TreeView 展開 → Page ノードにフォーカス・選択
+    //    ロード後・新規後の両方から呼ぶ共通メソッド
+    // ======================================================
+    private async Task FocusAndExpandTree()
+    {
+        if (_logic == null) return;
+
+        // TreeViewItem の Realize を待つ
+        await Task.Delay(80);
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_logic == null) return;
+
+            // ① Page ノードを取得
+            var pageNode = _logic.OutlineCollection
+                .FirstOrDefault(n => n.Type == "Page");
+            if (pageNode == null) return;
+
+            // ② Page を展開（セクションが見える）
+            pageNode.IsExpanded = true;
+
+            // ③ セクションノードは展開（子のコントロールは折りたたむ）
+            foreach (var secNode in pageNode.Children)
+            {
+                secNode.IsExpanded = false;  // コントロールは非表示
+            }
+
+            // ④ Page ノードを選択
+            _selectionChanging = true;
+            try
+            {
+                Tree.SelectedItem = pageNode;
+            }
+            finally
+            {
+                _selectionChanging = false;
+            }
+
+            // ⑤ 先頭にスクロール → Tree にフォーカス
+            Tree.ScrollIntoView(pageNode);
+            Tree.Focus();
+
+        }, DispatcherPriority.Render);
+    }
+
+    // ======================================================
+    // ✅ Undo/Redo ボタン有効化更新
+    // ======================================================
+    private void UpdateUndoButtons()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            UndoButton.IsEnabled = _undo.CanUndo;
+            RedoButton.IsEnabled = _undo.CanRedo;
+        });
+    }
+
+    // ======================================================
+    // ✅ Undo/Redo 後にプロパティパネルを最新値に更新
+    // ======================================================
+    private void RefreshAfterUndo()
+    {
+        // 選択中コントロールがあればプロパティ再表示
+        if (_logic?.SelectedControl != null)
+            ShowProperties(_logic.SelectedControl);
+
+        // 選択中セクションがあればセクションプロパティ再表示
+        if (Tree.SelectedItem is OutlineNode node &&
+            node.Target is SectionDefinition sec)
+            ShowSectionProperties(sec);
+
+        UpdateUndoButtons();
+    }
+
+    // ======================================================
+    // ✅ PropertyGrid TextBox の Enter キー対応
+    //    Enter 押下 → LostFocus を擬似発火して値を確定
+    // ======================================================
+    private void NumericTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        if (sender is not TextBox tb) return;
+
+        // ✅ PropertyRow.ForceApply で確実に値を確定
+        //    （同値でも ApplyWithOldNew が呼ばれる専用メソッド）
+        if (tb.DataContext is PropertyRow row)
+            row.ForceApply(tb.Text ?? "");
+
+        PageCanvas.Focus();
+        e.Handled = true;
+    }
+
+    // ======================================================
+    // ✅ 再起動前の保存確認API（MainWindow から呼ばれる）
+    // ======================================================
+
+    /// <summary>デザイナーにテンプレートが読み込まれているか</summary>
+    public bool IsReportLoaded => _pageReady && _logic != null;
+
+    /// <summary>
+    /// 保存確認ダイアログを表示して保存を実行する。
+    /// 戻り値: true=続行（保存済みor保存不要）, false=キャンセル
+    /// </summary>
+    public async Task<bool> ConfirmSaveBeforeRestartAsync()
+    {
+        if (!IsReportLoaded) return true;
+
+        var window = TopLevel.GetTopLevel(this) as Window;
+        if (window == null) return true;
+
+        // ✅ 保存確認（Loc 経由で言語対応）
+        var loc = LocalizationManager.Instance;
+        bool save = await DialogService.ShowConfirmAsync(
+            window,
+            loc["Confirm_SaveBeforeRestart"],
+            loc["Confirm_Exit_Title"]);
+
+        if (!save) return true;  // 保存しない → そのまま続行
+
+        // 保存ダイアログ
+        string templatePath = System.IO.Path.Combine(
+            AppContext.BaseDirectory, "Template");
+        if (!Directory.Exists(templatePath))
+            Directory.CreateDirectory(templatePath);
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "保存",
+            InitialFileName = "AcrReport_" + DateTime.Now.ToString("yyyyMMddHHmmss"),
+            Directory = templatePath,
+            Filters = { new FileDialogFilter
+            {
+                Name = "Across Report",
+                Extensions = { "acr" }
+            }}
+        };
+
+        var path = await dialog.ShowAsync(window);
+        if (string.IsNullOrWhiteSpace(path))
+            return false;  // キャンセル → 再起動中止
+
+        if (!path.EndsWith(".acr", StringComparison.OrdinalIgnoreCase))
+            path += ".acr";
+
+        _logic?.SaveAcr(path);
+        return true;  // 保存完了 → 続行
+    }
+
     private void AddLabel(int row, string text)
     {
         var lbl = new TextBlock { Text = text };
@@ -2077,7 +2495,7 @@ public partial class DesignerView : UserControl
     {
         var row = new PropertyRow(
             label,
-            currentValue.ToString("0.###"),
+            currentValue.ToString("0.###", CultureInfo.InvariantCulture),
             true,
             "numeric");
         row.ApplyWithOldNew = (oldS, newS) =>

@@ -147,4 +147,140 @@
   <data name="Props_Position" xml:space="preserve">
     <value>位置</value>
   </data>
+
+  <data name="Toolbar_Clear" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="PageSettings_Title" xml:space="preserve">
+    <value>ページ設定</value>
+  </data>
+  <data name="PageSettings_PaperSize" xml:space="preserve">
+    <value>用紙サイズ</value>
+  </data>
+  <data name="PageSettings_Orientation" xml:space="preserve">
+    <value>向き</value>
+  </data>
+  <data name="PageSettings_Portrait" xml:space="preserve">
+    <value>縦</value>
+  </data>
+  <data name="PageSettings_Landscape" xml:space="preserve">
+    <value>横</value>
+  </data>
+  <data name="PageSettings_PaperSizeMm" xml:space="preserve">
+    <value>紙サイズ (mm)</value>
+  </data>
+  <data name="PageSettings_Width" xml:space="preserve">
+    <value>幅</value>
+  </data>
+  <data name="PageSettings_Height" xml:space="preserve">
+    <value>高さ</value>
+  </data>
+  <data name="PageSettings_MarginTop" xml:space="preserve">
+    <value>上マージン:</value>
+  </data>
+  <data name="PageSettings_MarginBottom" xml:space="preserve">
+    <value>下マージン:</value>
+  </data>
+  <data name="PageSettings_MarginLeft" xml:space="preserve">
+    <value>左マージン:</value>
+  </data>
+  <data name="PageSettings_MarginRight" xml:space="preserve">
+    <value>右マージン:</value>
+  </data>
+  <data name="PageSettings_Grid" xml:space="preserve">
+    <value>グリッド:</value>
+  </data>
+  <data name="Tools_Title" xml:space="preserve">
+    <value>ツール</value>
+  </data>
+  <data name="Tools_DragHint" xml:space="preserve">
+    <value>(ドラッグしてCanvas上に配置)</value>
+  </data>
+  <data name="Tools_Label" xml:space="preserve">
+    <value>🏷️ ラベル</value>
+  </data>
+  <data name="Tools_Text" xml:space="preserve">
+    <value>🔤 テキスト</value>
+  </data>
+  <data name="Tools_Line" xml:space="preserve">
+    <value>📏 ライン</value>
+  </data>
+  <data name="Tools_Shape" xml:space="preserve">
+    <value>⬛ 図形</value>
+  </data>
+  <data name="Tools_Picture" xml:space="preserve">
+    <value>🖼 画像</value>
+  </data>
+  <data name="Tools_Barcode" xml:space="preserve">
+    <value>▌▌ バーコード</value>
+  </data>
+  <data name="Zoom_Hint" xml:space="preserve">
+    <value>ズーム (CTRL + ホイール)</value>
+  </data>
+
+  <data name="Menu_Designer" xml:space="preserve">
+    <value>デザイナー</value>
+  </data>
+  <data name="Menu_DataCreate" xml:space="preserve">
+    <value>データ作成</value>
+  </data>
+  <data name="Menu_DataMerge" xml:space="preserve">
+    <value>データ結合</value>
+  </data>
+  <data name="Menu_Exit" xml:space="preserve">
+    <value>終　了</value>
+  </data>
+  <data name="Toolbar_Undo" xml:space="preserve">
+    <value>↩ 戻す</value>
+  </data>
+  <data name="Toolbar_Redo" xml:space="preserve">
+    <value>↪ やり直し</value>
+  </data>
+
+  <data name="Dialog_Yes" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="Dialog_No" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="Dialog_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Confirm_Exit" xml:space="preserve">
+    <value>終了しますか?</value>
+  </data>
+  <data name="Confirm_Exit_Title" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="Confirm_Restart_En" xml:space="preserve">
+    <value>英語に切り替えます。
+今すぐ再起動しますか?</value>
+  </data>
+  <data name="Confirm_Restart_Ja" xml:space="preserve">
+    <value>日本語に切り替えます。
+今すぐ再起動しますか?</value>
+  </data>
+  <data name="Confirm_SaveBeforeRestart" xml:space="preserve">
+    <value>テンプレートが開いています。
+再起動前に保存しますか?</value>
+  </data>
+
+  <data name="Viewer_Template" xml:space="preserve"><value>テンプレート</value></data>
+  <data name="Viewer_Data" xml:space="preserve"><value>データ</value></data>
+  <data name="Viewer_Show" xml:space="preserve"><value>表示</value></data>
+  <data name="Viewer_PDF" xml:space="preserve"><value>PDF</value></data>
+  <data name="Viewer_EmbedOn" xml:space="preserve"><value>組込ON</value></data>
+  <data name="Viewer_EmbedOff" xml:space="preserve"><value>組込OFF</value></data>
+  <data name="Viewer_HTML" xml:space="preserve"><value>HTML</value></data>
+  <data name="Viewer_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Viewer_ImageEmbed" xml:space="preserve"><value>画像埋込</value></data>
+  <data name="Viewer_CssStyle" xml:space="preserve"><value>CSS形式</value></data>
+  <data name="Viewer_Font" xml:space="preserve"><value>フォント</value></data>
+  <data name="Viewer_FontDefault" xml:space="preserve"><value>デフォルト</value></data>
+  <data name="Db_ConnCheck" xml:space="preserve"><value>接続確認</value></data>
+  <data name="Db_SqlExec" xml:space="preserve"><value>SQL実行</value></data>
+  <data name="Db_JsonOutput" xml:space="preserve"><value>JSON出力</value></data>
+  <data name="Db_History" xml:space="preserve"><value>履歴</value></data>
+  <data name="Db_Clear" xml:space="preserve"><value>クリア</value></data>
+  <data name="Db_AddParam" xml:space="preserve"><value>パラメータ追加</value></data>
 </root>

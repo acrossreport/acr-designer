@@ -978,5 +978,31 @@ namespace AcrossReportDesigner.Views
             Debug.WriteLine(text);
         }
 
+        // ★ クリアボタン：起動直後の状態に完全リセット
+        private void HtmlModeClear_Click(object? sender, RoutedEventArgs e)
+        {
+            // テキストボックス
+            if (_templatePathBox != null) _templatePathBox.Text = "";
+            if (_dataPathBox     != null) _dataPathBox.Text     = "";
+            if (_messageText     != null) _messageText.Text     = "";
+
+            // プレビュー画像
+            if (_previewImage != null) _previewImage.Source = null;
+
+            // 内部状態
+            _pagePngs.Clear();
+            _lastRenderNodes.Clear();
+            _lastTemplate        = null;
+            _lastGeneratedHtml   = null;
+
+            // ComboBox を初期値に戻す
+            var combo = _htmlModeComboBox
+                        ?? this.FindControl<ComboBox>("HtmlModeComboBox");
+            if (combo != null) combo.SelectedIndex = 0;
+
+            // ボタン活性状態を更新
+            UpdateButtons();
+        }
+
     }
 }

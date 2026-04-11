@@ -50,4 +50,140 @@
   <value>Not translated</value>
 </data>
 
+
+  <data name="Toolbar_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="PageSettings_Title" xml:space="preserve">
+    <value>Page Settings</value>
+  </data>
+  <data name="PageSettings_PaperSize" xml:space="preserve">
+    <value>Paper Size</value>
+  </data>
+  <data name="PageSettings_Orientation" xml:space="preserve">
+    <value>Orientation</value>
+  </data>
+  <data name="PageSettings_Portrait" xml:space="preserve">
+    <value>Portrait</value>
+  </data>
+  <data name="PageSettings_Landscape" xml:space="preserve">
+    <value>Landscape</value>
+  </data>
+  <data name="PageSettings_PaperSizeMm" xml:space="preserve">
+    <value>Paper Size (mm)</value>
+  </data>
+  <data name="PageSettings_Width" xml:space="preserve">
+    <value>Width</value>
+  </data>
+  <data name="PageSettings_Height" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="PageSettings_MarginTop" xml:space="preserve">
+    <value>Top Margin:</value>
+  </data>
+  <data name="PageSettings_MarginBottom" xml:space="preserve">
+    <value>Bottom Margin:</value>
+  </data>
+  <data name="PageSettings_MarginLeft" xml:space="preserve">
+    <value>Left Margin:</value>
+  </data>
+  <data name="PageSettings_MarginRight" xml:space="preserve">
+    <value>Right Margin:</value>
+  </data>
+  <data name="PageSettings_Grid" xml:space="preserve">
+    <value>Grid:</value>
+  </data>
+  <data name="Tools_Title" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="Tools_DragHint" xml:space="preserve">
+    <value>(Drag to place on canvas)</value>
+  </data>
+  <data name="Tools_Label" xml:space="preserve">
+    <value>🏷️ Label</value>
+  </data>
+  <data name="Tools_Text" xml:space="preserve">
+    <value>🔤 TextBox</value>
+  </data>
+  <data name="Tools_Line" xml:space="preserve">
+    <value>📏 Line</value>
+  </data>
+  <data name="Tools_Shape" xml:space="preserve">
+    <value>⬛ Shape</value>
+  </data>
+  <data name="Tools_Picture" xml:space="preserve">
+    <value>🖼 Picture</value>
+  </data>
+  <data name="Tools_Barcode" xml:space="preserve">
+    <value>▌▌ Barcode</value>
+  </data>
+  <data name="Zoom_Hint" xml:space="preserve">
+    <value>Zoom (CTRL + Wheel)</value>
+  </data>
+
+  <data name="Menu_Designer" xml:space="preserve">
+    <value>Designer</value>
+  </data>
+  <data name="Menu_DataCreate" xml:space="preserve">
+    <value>Data Create</value>
+  </data>
+  <data name="Menu_DataMerge" xml:space="preserve">
+    <value>Data Merge</value>
+  </data>
+  <data name="Menu_Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Toolbar_Undo" xml:space="preserve">
+    <value>↩ Undo</value>
+  </data>
+  <data name="Toolbar_Redo" xml:space="preserve">
+    <value>↪ Redo</value>
+  </data>
+
+  <data name="Dialog_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Dialog_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Dialog_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Confirm_Exit" xml:space="preserve">
+    <value>Do you want to exit?</value>
+  </data>
+  <data name="Confirm_Exit_Title" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Confirm_Restart_En" xml:space="preserve">
+    <value>Switch to English.
+Do you want to restart now?</value>
+  </data>
+  <data name="Confirm_Restart_Ja" xml:space="preserve">
+    <value>Switch to Japanese.
+Do you want to restart now?</value>
+  </data>
+  <data name="Confirm_SaveBeforeRestart" xml:space="preserve">
+    <value>A template is open.
+Do you want to save before restarting?</value>
+  </data>
+
+  <data name="Viewer_Template" xml:space="preserve"><value>Template</value></data>
+  <data name="Viewer_Data" xml:space="preserve"><value>Data</value></data>
+  <data name="Viewer_Show" xml:space="preserve"><value>Preview</value></data>
+  <data name="Viewer_PDF" xml:space="preserve"><value>PDF</value></data>
+  <data name="Viewer_EmbedOn" xml:space="preserve"><value>Embed ON</value></data>
+  <data name="Viewer_EmbedOff" xml:space="preserve"><value>Embed OFF</value></data>
+  <data name="Viewer_HTML" xml:space="preserve"><value>HTML</value></data>
+  <data name="Viewer_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Viewer_ImageEmbed" xml:space="preserve"><value>Image Embed</value></data>
+  <data name="Viewer_CssStyle" xml:space="preserve"><value>CSS Style</value></data>
+  <data name="Viewer_Font" xml:space="preserve"><value>Font</value></data>
+  <data name="Viewer_FontDefault" xml:space="preserve"><value>Default</value></data>
+  <data name="Db_ConnCheck" xml:space="preserve"><value>Test Connection</value></data>
+  <data name="Db_SqlExec" xml:space="preserve"><value>Execute SQL</value></data>
+  <data name="Db_JsonOutput" xml:space="preserve"><value>JSON Output</value></data>
+  <data name="Db_History" xml:space="preserve"><value>History</value></data>
+  <data name="Db_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Db_AddParam" xml:space="preserve"><value>Add Parameter</value></data>
 </root>

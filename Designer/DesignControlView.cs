@@ -1,4 +1,4 @@
-﻿using AcrossReportDesigner.Models;
+using AcrossReportDesigner.Models;
 using AcrossReportDesigner.Services;
 using Avalonia;
 using Avalonia.Collections;
@@ -350,14 +350,14 @@ public sealed class DesignControlView : Border
         double widthMm = Math.Max(1.0, widthPx / pxPerMm);
         double heightMm = Math.Max(1.0, heightPx / pxPerMm);
 
-        // ★ グリッドスナップ適用
-        if (GridMm > 0)
-        {
-            leftMm = Math.Round(leftMm / GridMm) * GridMm;
-            topMm = Math.Round(topMm / GridMm) * GridMm;
-            widthMm = Math.Max(GridMm, Math.Round(widthMm / GridMm) * GridMm);
-            heightMm = Math.Max(GridMm, Math.Round(heightMm / GridMm) * GridMm);
-        }
+        // ★ グリッドスナップ適用（無効化）
+        //if (GridMm > 0)
+        //{
+        //    leftMm = Math.Round(leftMm / GridMm) * GridMm;
+        //    topMm = Math.Round(topMm / GridMm) * GridMm;
+        //    widthMm = Math.Max(GridMm, Math.Round(widthMm / GridMm) * GridMm);
+        //    heightMm = Math.Max(GridMm, Math.Round(heightMm / GridMm) * GridMm);
+        //}
         leftMm = Math.Max(0, leftMm);
         topMm = Math.Max(0, topMm);
 
@@ -380,19 +380,19 @@ public sealed class DesignControlView : Border
         Debug.WriteLine($"SetSelected {Model.Name} = {selected}");
         if (selected)
         {
-            BorderBrush = Brushes.Blue;
+            // ✅ 選択中：青枠2px ＋ 半透明青背景（視認しやすい濃さ）
+            BorderBrush = new SolidColorBrush(Color.FromRgb(30, 111, 191));
             BorderThickness = new Thickness(2);
-            // ✅ Shapeの塗りを壊さない（ここが重要）
+            // ✅ Shapeの塗りを壊さない
             if (!Model.Type.Contains("Shape"))
             {
-                Background = new SolidColorBrush(Color.FromArgb(25, 0, 120, 255));
+                Background = new SolidColorBrush(Color.FromArgb(60, 30, 111, 191));
             }
         }
         else
         {
             BorderBrush = _normalBorderBrush;
             BorderThickness = _normalBorderThickness;
-            // ✅ 透明固定に戻さず、通常背景へ復帰
             Background = _normalBackground ?? Brushes.Transparent;
         }
     }

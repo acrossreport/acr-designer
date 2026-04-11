@@ -1,43 +1,30 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="AcrossReportDesigner.Views.Dialogs.MessageDialog"
-        Width="300"
-        Height="150"
         CanResize="False"
+        SizeToContent="Height"
+        Width="440"
+        MinHeight="180"
         WindowStartupLocation="CenterOwner">
-
-	<Border Padding="20">
-		<StackPanel Spacing="24">
-
-			<TextBlock x:Name="MessageBlock"
-                       TextWrapping="Wrap"
-                       FontSize="14"
-                       TextAlignment="Center"
-                       HorizontalAlignment="Stretch"/>
-
-			<!-- ボタンエリア（Gridで中央固定） -->
-			<Grid ColumnDefinitions="*,Auto,20,Auto,*">
-
-				<Button Grid.Column="1"
-                        Content="はい"
-                        Width="90"
-                        Height="30"
-                        FontSize="13"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        Click="Yes_Click"/>
-
-				<Button Grid.Column="3"
-                        Content="いいえ"
-                        Width="90"
-                        Height="30"
-                        FontSize="13"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        Click="No_Click"/>
-
-			</Grid>
-
+	<Grid RowDefinitions="*,Auto"
+          Margin="30,24,30,24">
+		<TextBlock x:Name="MessageBlock"
+                   Text=""
+                   FontSize="15"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="0,0,0,24"/>
+		<StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Spacing="24"
+                    HorizontalAlignment="Center">
+			<Button Content="OK"
+                    Width="120"
+                    Height="34"
+                    FontSize="14"
+                    Click="Yes_Click"
+                    HorizontalContentAlignment="Center"/>
 		</StackPanel>
-	</Border>
+	</Grid>
 </Window>

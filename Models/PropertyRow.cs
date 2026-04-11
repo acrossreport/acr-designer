@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -120,6 +120,33 @@ public class PropertyRow : INotifyPropertyChanged
         IsEditable = editable;
         Editor = editor;
         ComboItems = comboItems;
+    }
+
+    // ======================================================
+    // ✅ Enter キー用：現在の値で強制的に Apply を発火
+    //    Value setter は同値だとスキップするため専用メソッドが必要
+    // ======================================================
+    public void ForceApply(string text)
+    {
+        var trimmed = text?.Trim() ?? "";
+        // 空文字は無視
+        if (string.IsNullOrWhiteSpace(trimmed)) return;
+
+        try
+        {
+            if (ApplyWithOldNew != null)
+                ApplyWithOldNew(_value, trimmed);
+            else
+                Apply?.Invoke(trimmed);
+
+            // 内部値も更新（表示をそろえる）
+            _value = trimmed;
+            Raise(nameof(Value));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"★ PropertyRow.ForceApply例外: {ex.Message}");
+        }
     }
 
     private void Raise(string name)
