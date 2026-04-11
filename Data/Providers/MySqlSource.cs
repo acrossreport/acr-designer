@@ -25,7 +25,7 @@ public sealed class MySqlSource : IDataSource
         // ✅ Parameter追加
         foreach (var kv in parameters)
         {
-            string name = kv.Key.TrimStart(':', '@');
+            string name = "@" + kv.Key.TrimStart(':', '@');
             object value = kv.Value ?? DBNull.Value;
 
             cmd.Parameters.AddWithValue(name, value);

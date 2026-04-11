@@ -32,6 +32,9 @@ public partial class App : Application
         var langCode = saved ?? (supported.Contains(osLang) ? osLang : "ja");
         LocalizationManager.Instance.SwitchLanguage(langCode);
 
+        // ✅ ACR設定の読み込み（なければ新規作成）← ここに追加
+        AcrConfigService.LoadOrCreate();
+
         // ✅ OS別フォントの設定
         Resources["DefaultFontFamily"] = GetOsFontFamily();
 

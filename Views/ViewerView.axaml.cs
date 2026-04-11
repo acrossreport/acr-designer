@@ -1,4 +1,5 @@
-﻿using AcrossReportDesigner.Engines;
+﻿using AcrDesigner.Services;
+using AcrossReportDesigner.Engines;
 using AcrossReportDesigner.Models;
 using AcrossReportDesigner.Rendering;
 using AcrossReportDesigner.Services;
@@ -443,7 +444,7 @@ namespace AcrossReportDesigner.Views
         // =========================
         // PDF
         // =========================
-        private void Pdf_Click(object? sender, RoutedEventArgs e)
+        private async void Pdf_Click(object? sender, RoutedEventArgs e)
         {
             try
             {
@@ -454,12 +455,41 @@ namespace AcrossReportDesigner.Views
                 if (string.IsNullOrWhiteSpace(dataPath) || !File.Exists(dataPath))
                 { SetMessage("先に表示してください。"); return; }
 
+                // ✅ ファイル保存ダイアログ
+                var top = TopLevel.GetTopLevel(this);
+                if (top == null) return;
+
+                string pdfDir = AcrConfigService.ResolvePdfDir();
+                Directory.CreateDirectory(pdfDir);
+                var initialFolder = await top.StorageProvider
+                    .TryGetFolderFromPathAsync(pdfDir);
+
+                string defaultFileName = DateTime.Now.ToString("yyyyMMddHHmmss") + ".pdf";
+
+                var file = await top.StorageProvider.SaveFilePickerAsync(
+                    new FilePickerSaveOptions
+                    {
+                        Title = "PDFの保存先を選択",
+                        SuggestedStartLocation = initialFolder,
+                        SuggestedFileName = defaultFileName,
+                        FileTypeChoices = new[]
+                        {
+                            new FilePickerFileType("PDF Files")
+                            {
+                                Patterns = new[] { "*.pdf" }
+                            }
+                        },
+                        DefaultExtension = "pdf"
+                    });
+
+                // ✅ キャンセル時は何もしない
+                if (file == null) return;
+
+                string? pdfPath = file.TryGetLocalPath();
+                if (string.IsNullOrEmpty(pdfPath)) return;
+
                 string templateJson = GetTemplateJson(reportPath);
                 string dataJson = File.ReadAllText(dataPath);
-
-                string dir = Path.Combine(AppContext.BaseDirectory, "Output");
-                Directory.CreateDirectory(dir);
-                string pdfPath = Path.Combine(dir, DateTime.Now.ToString("yyyyMMddHHmmss") + ".pdf");
 
                 var engine = new AcrEngine();
                 byte[] pdf = engine.RenderPdf(templateJson, dataJson);
@@ -520,11 +550,40 @@ namespace AcrossReportDesigner.Views
         {
             try
             {
+                // ✅ ファイル保存ダイアログ
+                var top = TopLevel.GetTopLevel(this);
+                if (top == null) return;
+
+                string htmlDir = AcrConfigService.ResolveHtmlDir();
+                Directory.CreateDirectory(htmlDir);
+                var initialFolder = await top.StorageProvider
+                    .TryGetFolderFromPathAsync(htmlDir);
+
+                string defaultFileName = DateTime.Now.ToString("yyyyMMddHHmmss") + ".html";
+
+                var file = await top.StorageProvider.SaveFilePickerAsync(
+                    new FilePickerSaveOptions
+                    {
+                        Title = "HTMLの保存先を選択",
+                        SuggestedStartLocation = initialFolder,
+                        SuggestedFileName = defaultFileName,
+                        FileTypeChoices = new[]
+                        {
+                            new FilePickerFileType("HTML Files")
+                            {
+                                Patterns = new[] { "*.html" }
+                            }
+                        },
+                        DefaultExtension = "html"
+                    });
+
+                // ✅ キャンセル時は何もしない
+                if (file == null) return;
+
+                string? htmlPath = file.TryGetLocalPath();
+                if (string.IsNullOrEmpty(htmlPath)) return;
+
                 bool isImageEmbed = _htmlModeComboBox?.SelectedIndex == 0;
-                string dir = Path.Combine(AppContext.BaseDirectory, "OutPut\\html");
-                Directory.CreateDirectory(dir);
-                string baseName = DateTime.Now.ToString("yyyyMMddHHmmss");
-                string htmlPath = Path.Combine(dir, baseName + ".html");
 
                 if (isImageEmbed)
                 {
@@ -535,7 +594,6 @@ namespace AcrossReportDesigner.Views
                 }
                 else
                 {
-                    // ← この部分を差し替え
                     string? reportPath = _templatePathBox?.Text;
                     string? dataPath = _dataPathBox?.Text;
                     if (string.IsNullOrWhiteSpace(reportPath) || !File.Exists(reportPath)) return;

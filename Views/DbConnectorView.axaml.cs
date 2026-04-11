@@ -1,4 +1,5 @@
-﻿using AcrossReportDesigner.Data;
+﻿using AcrDesigner.Services;
+using AcrossReportDesigner.Data;
 using AcrossReportDesigner.Data.Providers;
 using AcrossReportDesigner.Models;
 using AcrossReportDesigner.Services;
@@ -7,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
@@ -67,12 +69,74 @@ public partial class DbConnectorView : UserControl
         ReloadHistoryDropdown();
 
         // ✅ 初期接続文字列（例）
-        ConnectionStringTextBox.Text =
-            "user id=miuraya;password=miuraya;data source=" +
-            "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=192.168.33.45)(PORT=1521))" +
-            "(CONNECT_DATA=(SERVICE_NAME=acm50.sunfood)))";
+        //ConnectionStringTextBox.Text =
+        //    "user id=miuraya;password=miuraya;data source=" +
+        //    "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=192.168.33.45)(PORT=1521))" +
+        //    "(CONNECT_DATA=(SERVICE_NAME=acm50.sunfood)))";
 
+        // ✅ DB種別変更時のダイアログ制御
+        DbTypeComboBox.SelectionChanged += DbType_SelectionChanged;
+        
         RefreshParameterGrid();
+    }
+
+    // =====================================================
+    // ✅ DB種別変更 → SQLite/CSV はファイル選択ダイアログ
+    // =====================================================
+    private async void DbType_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        int index = DbTypeComboBox.SelectedIndex;
+
+        // SQLite = 4, CSV = 5 (CSVがある場合)
+        if (index == 4)
+        {
+            await PickFileForConnectionAsync(
+                title: "SQLiteファイルを選択",
+                filters: new[] { ("SQLite Files", new[] { "db", "sqlite", "sqlite3" }) },
+                buildConnStr: path => $"Data Source={path}"
+            );
+        }
+        else if (index == 5) // CSV
+        {
+            await PickFileForConnectionAsync(
+                title: "CSVファイルを選択",
+                filters: new[] { ("CSV Files", new[] { "csv" }) },
+                buildConnStr: path => $"Data Source={Path.GetDirectoryName(path)};Extended Properties=\"text;HDR=Yes\";FileName={Path.GetFileName(path)}"
+            );
+        }
+    }
+
+    private async Task PickFileForConnectionAsync(
+        string title,
+        (string Name, string[] Extensions)[] filters,
+        Func<string, string> buildConnStr)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+        // ✅ 初期フォルダ = acrconfig.json の DataDir
+        var initialDir = AcrConfigService.ResolveDataDir();
+        var initialFolder = await topLevel.StorageProvider
+            .TryGetFolderFromPathAsync(initialDir);
+
+        var fileTypeFilters = filters
+            .Select(f => new Avalonia.Platform.Storage.FilePickerFileType(f.Name)
+            {
+                Patterns = f.Extensions.Select(ext => $"*.{ext}").ToArray()
+            })
+            .ToList();
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(
+            new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = title,
+                AllowMultiple = false,
+                FileTypeFilter = fileTypeFilters,
+                SuggestedStartLocation = initialFolder
+            });
+        if (files.Count == 0) return; // キャンセル
+        var path = files[0].TryGetLocalPath();
+        if (string.IsNullOrEmpty(path)) return;
+        ConnectionStringTextBox.Text = buildConnStr(path);
     }
 
     private void HistoryComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -102,8 +166,6 @@ public partial class DbConnectorView : UserControl
             });
         }
     }
-
-
     // =====================================================
     // ✅ 接続確認
     // =====================================================
@@ -269,9 +331,23 @@ public partial class DbConnectorView : UserControl
                 4 => new SQLiteSource(),
                 _ => throw new NotSupportedException()
             };
-            // ✅ 入力済みパラメータだけ辞書化
+            // ✅ 空白パラメータチェック
+            var emptyParams = ParamList
+                .Where(x => string.IsNullOrWhiteSpace(x.Value))
+                .Select(x => x.Name)
+                .ToList();
+
+            if (emptyParams.Count > 0)
+            {
+                await DialogService.ShowMessageAsync(
+                    this,
+                    $"パラメータが不足しています。\n未入力: {string.Join(", ", emptyParams)}",
+                    "エラー");
+                return;
+            }
+
+            // ✅ パラメータ辞書化（全件確定済み）
             var paramDict = ParamList
-                .Where(x => !string.IsNullOrWhiteSpace(x.Value))
                 .ToDictionary(
                     x => x.Name,
                     x => (object?)x.Value.Trim()
@@ -356,7 +432,7 @@ public partial class DbConnectorView : UserControl
             ).ToList();
     }
     // =====================================================
-    // ✅ JSON Export（空欄パラメータ除外）
+    // ✅ JSON Export（ファイル保存ダイアログ）
     // =====================================================
     private async void ExportJson_Click(object? sender, RoutedEventArgs e)
     {
@@ -386,23 +462,50 @@ public partial class DbConnectorView : UserControl
                 {
                     WriteIndented = true
                 });
-            // =========================
-            // Dataフォルダ固定
-            // =========================
-            string dataDir = Path.Combine(
-                AppContext.BaseDirectory,
-                "Data");
+
+            // ✅ ファイル保存ダイアログ
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+
+            // ✅ 初期フォルダ = acrconfig.json の DataDir
+            string dataDir = AcrConfigService.ResolveDataDir();
             Directory.CreateDirectory(dataDir);
-            string fileName =
+            var initialFolder = await topLevel.StorageProvider
+                .TryGetFolderFromPathAsync(dataDir);
+
+            // ✅ 初期ファイル名
+            string defaultFileName =
                 "AcrData_" +
                 DateTime.Now.ToString("yyyyMMddHHmmss") +
                 ".json";
-            string fullPath = Path.Combine(dataDir, fileName);
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(
+                new Avalonia.Platform.Storage.FilePickerSaveOptions
+                {
+                    Title = "JSONファイルの保存先を選択",
+                    SuggestedStartLocation = initialFolder,
+                    SuggestedFileName = defaultFileName,
+                    FileTypeChoices = new[]
+                    {
+                        new Avalonia.Platform.Storage.FilePickerFileType("JSON Files")
+                        {
+                            Patterns = new[] { "*.json" }
+                        }
+                    },
+                    DefaultExtension = "json"
+                });
+
+            // ✅ キャンセル時は何もしない
+            if (file == null) return;
+
+            var fullPath = file.TryGetLocalPath();
+            if (string.IsNullOrEmpty(fullPath)) return;
 
             File.WriteAllText(fullPath, json);
+
             await DialogService.ShowMessageAsync(
                 this,
-                $"JSONを出力しました\n{fileName}",
+                $"JSONを出力しました\n{Path.GetFileName(fullPath)}",
                 "出力完了");
         }
         catch (Exception ex)

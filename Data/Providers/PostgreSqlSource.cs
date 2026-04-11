@@ -25,7 +25,8 @@ public sealed class PostgreSqlSource : IDataSource
         // ✅ パラメータ追加
         foreach (var kv in parameters)
         {
-            string name = kv.Key.TrimStart(':', '@');
+            // ✅ PostgreSQL は @ プレフィックス必須
+            string name = "@" + kv.Key.TrimStart(':', '@');
             object value = kv.Value ?? DBNull.Value;
 
             cmd.Parameters.AddWithValue(name, value);

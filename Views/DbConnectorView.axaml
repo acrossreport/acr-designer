@@ -26,7 +26,6 @@
 				<ComboBoxItem Content="PostgreSQL"/>
 				<ComboBoxItem Content="MySQL"/>
 				<ComboBoxItem Content="SQLite"/>
-				<ComboBoxItem Content="JSON"/>
 				<ComboBoxItem Content="CSV"/>
 			</ComboBox>
 			<!-- ✅ ボタン共通スタイル -->
@@ -106,10 +105,11 @@
 									<DataTemplate>
 										<Grid ColumnDefinitions="120,*"
 											  ColumnSpacing="6">
-											<!-- ✅ 左列：Name -->
+											<!-- ✅ 左列：Name（読み取り専用） -->
 											<TextBox Grid.Column="0"
 													 Height="32"
 													 FontSize="14"
+													 IsReadOnly="True"
 													 Text="{Binding Name, Mode=TwoWay}"/>
 											<!-- ✅ 右列：Value -->
 											<TextBox Grid.Column="1"
