@@ -46,4 +46,6 @@ chmod +x AcrossReportDesigner
 
 ## ライセンス
 
-© Across Report. All rights reserved.
+© Across Systems Corporation. All rights reserved.
+
+
