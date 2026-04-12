@@ -1,7 +1,8 @@
 # ACR Designer
 
-**ACR Designer** は [ACR (Across Report Renderer)](https://github.com/acrossreport/acr) エンジン対応の WYSIWYG 帳票デザイナーです。  
-Avalonia UI を採用しており、Windows / macOS でネイティブ動作します。
+**ACR Designer** は、ACR（Across Report Renderer）エンジン向けの WYSIWYG 帳票デザイナです。
+ピクセル単位で正確かつ、プリンタに依存しない帳票設計を可能にします。
+Avalonia UI を採用し、Windows と macOS でネイティブに動作します。
 
 ---
 
