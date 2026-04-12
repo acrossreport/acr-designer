@@ -44,12 +44,6 @@ chmod +x AcrossReportDesigner
 
 ---
 
-## ソースコード
-
-ソースコードは [acr-designer-src](https://github.com/acrossreport/acr-designer-src) で公開しています。
-
----
-
 ## ライセンス
 
 © Across Report. All rights reserved.
