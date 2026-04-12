@@ -1,6 +1,7 @@
 # ACR Designer
 
-**ACR Designer** is a WYSIWYG report designer for the [ACR (Across Report Renderer)](https://github.com/acrossreport/acr) engine.  
+ACR Designer is a WYSIWYG report designer for the [ACR (Across Report Renderer)](https://github.com/acrossreport/acr)engine.
+It enables pixel-perfect, printer-independent report design.
 Built with Avalonia UI — runs natively on Windows and macOS.
 
 ---
