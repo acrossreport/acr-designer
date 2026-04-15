@@ -25,6 +25,9 @@ public partial class MainWindow : Window
         _dbConnectorView = new DbConnectorView();
         _viewerView      = new ViewerView();
 
+        // ✅ DbConnectorにDesignerViewの参照を渡す（テンプレートパス取得用）
+        _dbConnectorView.DesignerView = _designerView;
+
         MainContent.Content = _designerView;
 
         Icon            = new WindowIcon("Assets/app.png");

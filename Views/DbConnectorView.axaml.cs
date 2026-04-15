@@ -37,6 +37,9 @@ public partial class DbConnectorView : UserControl
 
     private List<SqlHistoryItem> _historyCache = new();
 
+    // ✅ デザイナービュー参照（テンプレートファイルパス取得用）
+    public DesignerView? DesignerView { get; set; }
+
     public DbConnectorView()
     {
         InitializeComponent();
@@ -70,9 +73,31 @@ public partial class DbConnectorView : UserControl
 
         // ✅ 初期接続文字列（例）
         //ConnectionStringTextBox.Text =
-        //    "user id=miuraya;password=miuraya;data source=" +
+        //    "user id=miuraya;password=miuraya;" +
+        //    "data source=" +
         //    "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=192.168.33.45)(PORT=1521))" +
-        //    "(CONNECT_DATA=(SERVICE_NAME=acm50.sunfood)))";
+        //    "(CONNECT_DATA=(SERVICE_NAME=acm50.sunfood)));";
+
+        //ConnectionStringTextBox.Text =
+        //    "Server=localhost\\SQLEXPRESS,61854;" +
+        //    "Database=acm;" +
+        //    "User Id=sa;" +
+        //    "Password=Across5567;" +
+        //    "TrustServerCertificate=True;";
+
+        ConnectionStringTextBox.Text =
+            "Host=localhost;" +
+            "Port=5432;" +
+            "Database=acm;" +
+            "Username=postgres;" +
+            "Password=Across5567;";
+
+        //ConnectionStringTextBox.Text =
+        //    "Server=localhost;" +
+        //    "Port=3306;" +
+        //    "Database=across;" +
+        //    "User Id=root;" +
+        //    "Password=Across5567;";
 
         // ✅ DB種別変更時のダイアログ制御
         DbTypeComboBox.SelectionChanged += DbType_SelectionChanged;
@@ -360,6 +385,8 @@ public partial class DbConnectorView : UserControl
             );
             // ✅ 実行成功したら履歴保存する
             SaveToHistory();
+            // ✅ SqlDirにSQL実行ログを保存
+            SaveSqlLog(SqlTextBox.Text ?? "");
             // ✅ 履歴ドロップダウン更新
             ReloadHistoryDropdown();
             // ✅ PreviewGrid表示用に変換
@@ -370,7 +397,7 @@ public partial class DbConnectorView : UserControl
                     foreach (DataColumn col in table.Columns)
                     {
                         object value = row[col];
-                        dict[col.ColumnName] =
+                        dict[col.ColumnName.ToUpperInvariant()] =
                             value == DBNull.Value ? null : value;
                     }
 
@@ -386,7 +413,7 @@ public partial class DbConnectorView : UserControl
 
             foreach (DataColumn col in table.Columns)
             {
-                string columnName = col.ColumnName;
+                string columnName = col.ColumnName.ToUpperInvariant();
 
                 PreviewGrid.Columns.Add(new DataGridTextColumn
                 {
@@ -423,6 +450,41 @@ public partial class DbConnectorView : UserControl
             list = list.Take(30).ToList();
         HistoryManager.Save(list);
     }
+
+    // =====================================================
+    // ✅ SQL実行ログを SqlDir に保存
+    //    ファイル名: yyyyMMddHHmmss_sql.json
+    //    内容: 実行日時 + SQL全文
+    // =====================================================
+    private void SaveSqlLog(string sql)
+    {
+        try
+        {
+            string sqlDir = AcrConfigService.ResolveSqlDir();
+            Directory.CreateDirectory(sqlDir);
+
+            string fileName = DateTime.Now.ToString("yyyyMMddHHmmss") + "_sql.json";
+            string filePath = Path.Combine(sqlDir, fileName);
+
+            var logObj = new
+            {
+                ExecutedAt  = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                DbType      = DbTypeComboBox.SelectedIndex.ToString(),
+                Sql         = sql,
+                Parameters  = ParamList.ToDictionary(p => p.Name, p => p.Value)
+            };
+
+            string json = JsonSerializer.Serialize(
+                logObj,
+                new JsonSerializerOptions { WriteIndented = true });
+
+            File.WriteAllText(filePath, json);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SqlLog] 保存失敗: {ex.Message}");
+        }
+    }
     private void ReloadHistoryDropdown()
     {
         _historyCache = HistoryManager.Load();
@@ -450,10 +512,22 @@ public partial class DbConnectorView : UserControl
             {
                 dataRows = items.ToList();
             }
+
+            // ✅ テンプレート情報（デザイナで開いているファイル）
+            string templatePath = DesignerView?.CurrentTemplatePath ?? "";
+            string templateFile = string.IsNullOrEmpty(templatePath)
+                ? ""
+                : Path.GetFileName(templatePath);
+
             object jsonObj = new
             {
+                Meta = new
+                {
+                    CreatedAt    = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    TemplateFile = templateFile,
+                    TemplatePath = templatePath
+                },
                 Parameters = paramDict,
-                Sql = sql,
                 Data = dataRows
             };
             string json = JsonSerializer.Serialize(

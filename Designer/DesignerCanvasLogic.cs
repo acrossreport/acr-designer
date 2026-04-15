@@ -69,6 +69,10 @@ public sealed class DesignerCanvasLogic
     public int Orientation { get; set; }
     public double GridMm { get; set; } = 1;
     public bool IsLandscape { get; set; } = false;
+    // =====================================================
+    // ✅ 現在開いているテンプレートファイルのパス
+    // =====================================================
+    public string CurrentFilePath { get; private set; } = "";
     private readonly List<SectionDefinition> _sections = new();
     private readonly Dictionary<DesignControl, Control> _adornerMap = new();
     private readonly List<string> _undo = new();
@@ -514,7 +518,7 @@ public sealed class DesignerCanvasLogic
             return bcView;
         }
         // =========================
-        // Normal Control
+        // Normal Control（Shape含む）
         // =========================
         var view = new DesignControlView(ctrl);
         // ★ 選択
@@ -563,7 +567,9 @@ public sealed class DesignerCanvasLogic
         Canvas.SetTop(view, y);
         view.Width = UnitConverter.MmToPx(ctrl.WidthMm);
         view.Height = UnitConverter.MmToPx(ctrl.HeightMm);
-        view.SetValue(Canvas.ZIndexProperty, ctrl.ZIndex);
+        // Shape は背景帯なので必ず最背面
+        int zIndex = ctrl.Type.Contains("Shape") ? -1 : ctrl.ZIndex;
+        view.SetValue(Canvas.ZIndexProperty, zIndex);
         canvas.Children.Add(view);
         return view;
     }
@@ -1000,7 +1006,7 @@ public sealed class DesignerCanvasLogic
                     ["Width"]     = MmToTwip(ctrl.WidthMm),
                     ["Height"]    = MmToTwip(ctrl.HeightMm),
                     ["Text"]      = ctrl.Text ?? "",
-                    ["DataField"] = ctrl.DataField ?? "",
+                    ["DataField"] = (ctrl.DataField ?? "").ToUpperInvariant(),
                     ["Style"]     = ctrl.Style ?? "",
                 };
                 if (ctrl.Type.Contains("Line"))
@@ -1141,6 +1147,7 @@ public sealed class DesignerCanvasLogic
 
         System.IO.Directory.Delete(tempDir, true);
 
+        CurrentFilePath = path;
         StatusHandler?.Invoke($"保存完了: {System.IO.Path.GetFileName(path)}", false);
     }
 
@@ -1399,6 +1406,8 @@ public sealed class DesignerCanvasLogic
         // temp削除
         // =========================
         System.IO.Directory.Delete(tempDir, true);
+
+        CurrentFilePath = path;
     }
 
     // ======================================================

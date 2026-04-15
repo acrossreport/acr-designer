@@ -2359,6 +2359,9 @@ public partial class DesignerView : UserControl
     /// <summary>デザイナーにテンプレートが読み込まれているか</summary>
     public bool IsReportLoaded => _pageReady && _logic != null;
 
+    // ✅ 現在開いているテンプレートファイルのパス（DbConnectorから参照）
+    public string CurrentTemplatePath => _logic?.CurrentFilePath ?? "";
+
     /// <summary>
     /// 保存確認ダイアログを表示して保存を実行する。
     /// 戻り値: true=続行（保存済みor保存不要）, false=キャンセル

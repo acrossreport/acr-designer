@@ -35,10 +35,23 @@ public class LicenseService : ILicenseService
 
     // ── ILicenseService 実装 ─────────────────────────────────
 
+    /// <summary>
+    /// acr_license_check() 戻り値:
+    ///   2 = DESIGNERPRO（ウォーターマークなし）
+    ///   1 = Licensed / DESIGNER（ウォーターマークあり・デザイナー使用可）
+    ///   0 = 未認証（ウォーターマークあり）
+    /// </summary>
     public Task<LicenseCheckResult> CheckAsync() =>
-        Task.Run(() => acr_license_check() == 1
-            ? new LicenseCheckResult(IsLicensed: true,  Watermark: false, IsExpired: false)
-            : new LicenseCheckResult(IsLicensed: false, Watermark: true,  IsExpired: false));
+        Task.Run(() =>
+        {
+            int result = acr_license_check();
+            return result switch
+            {
+                2 => new LicenseCheckResult(IsLicensed: true,  Watermark: false, IsExpired: false), // Pro
+                1 => new LicenseCheckResult(IsLicensed: true,  Watermark: true,  IsExpired: false), // Designer
+                _ => new LicenseCheckResult(IsLicensed: false, Watermark: true,  IsExpired: false)  // 未認証
+            };
+        });
 
     public Task<LicenseActivateResult> ActivateAsync(string email, string key) =>
         Task.Run(() =>

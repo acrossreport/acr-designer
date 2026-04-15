@@ -16,6 +16,7 @@ public class AcrConfigModel
     public string PdfDir { get; set; } = "Output/PDF";
     public string PngDir { get; set; } = "Output/PNG";
     public string HtmlDir { get; set; } = "Output/html";
+    public string SqlDir  { get; set; } = "sql";
 }
 
 public static class AcrConfigService
@@ -82,6 +83,7 @@ public static class AcrConfigService
     public static string ResolvePdfDir() => ResolvePath(Config.PdfDir);
     public static string ResolvePngDir() => ResolvePath(Config.PngDir);
     public static string ResolveHtmlDir() => ResolvePath(Config.HtmlDir);
+    public static string ResolveSqlDir() => ResolvePath(Config.SqlDir);
 
     // ─── 非公開メソッド ──────────────────────────────────────
 
@@ -110,6 +112,7 @@ public static class AcrConfigService
         CreateIfNotExists(ResolvePdfDir());
         CreateIfNotExists(ResolvePngDir());
         CreateIfNotExists(ResolveHtmlDir());
+        CreateIfNotExists(ResolveSqlDir());
     }
 
     private static void CreateIfNotExists(string absolutePath)

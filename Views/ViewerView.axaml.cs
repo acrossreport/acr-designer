@@ -282,15 +282,20 @@ namespace AcrossReportDesigner.Views
                 _pagePngs.Clear();
                 _lastRenderNodes.Clear();
                 _lastTemplate = null;
+                if (_previewImage != null) _previewImage.Source = null;
+                SetMessage("");
 
                 string? reportPath = _templatePathBox?.Text;
-                string? dataPath = _dataPathBox?.Text;
+                string? dataPath   = _dataPathBox?.Text;
 
                 if (string.IsNullOrWhiteSpace(reportPath) || !File.Exists(reportPath)) return;
-                if (string.IsNullOrWhiteSpace(dataPath) || !File.Exists(dataPath)) return;
+                if (string.IsNullOrWhiteSpace(dataPath)   || !File.Exists(dataPath))   return;
+
+                string savedZipPath = "";
 
                 await Task.Run(async () =>
                 {
+                    // ── テンプレート読込 ──────────────────────────
                     progress.SetMessage("テンプレート読込中...");
                     progress.SetProgress(10);
 
@@ -312,42 +317,53 @@ namespace AcrossReportDesigner.Views
                         templateJson = await File.ReadAllTextAsync(reportPath);
                     }
 
-                    // ★ここに追加（templateJson確定直後）
-                    Debug.WriteLine($"[ACR] templateJson.Length = {templateJson.Length}");
-                    Debug.WriteLine($"[ACR] 先頭100 = {templateJson.Substring(0, Math.Min(100, templateJson.Length))}");
-                    Debug.WriteLine($"[ACR] PaperWidth抽出 = {ExtractValue(templateJson, "PaperWidth")}");
-                    Debug.WriteLine($"[ACR] PaperHeight抽出 = {ExtractValue(templateJson, "PaperHeight")}");
-
-                    progress.SetMessage("データ読込中...");
+                    // ── データ読込 ────────────────────────────────
                     progress.SetMessage("データ読込中...");
                     progress.SetProgress(30);
-
                     string dataJson = await File.ReadAllTextAsync(dataPath);
 
-                    progress.SetMessage("レイアウト生成中...");
+                    // ── Rust DLL で ZIP（manifest + pages/*.png）を一括生成 ──
+                    progress.SetMessage("描画中...");
                     progress.SetProgress(60);
 
-                    // ★ Rust DLL でページ数取得
-                    var engine = new AcrEngine();
-                    int pageCount = engine.GetPageCount(templateJson, dataJson);
+                    var engine   = new AcrEngine();
+                    byte[] zipBytes = engine.RenderZip(templateJson, dataJson);
 
-                    // ★ デバッグ追加
-                    Debug.WriteLine($"[RustDLL] pageCount = {pageCount}");
-                    Debug.WriteLine($"[RustDLL] templateJson length = {templateJson.Length}");
-                    Debug.WriteLine($"[RustDLL] dataJson length = {dataJson.Length}");
+                    // ── PngDir に yyyyMMddHHmmss.zip として保存 ───
+                    progress.SetMessage("ZIP保存中...");
+                    progress.SetProgress(85);
 
-                    progress.SetMessage("描画中...");
-                    progress.SetProgress(80);
+                    string pngDir = AcrConfigService.ResolvePngDir();
+                    Directory.CreateDirectory(pngDir);
+                    string zipName = DateTime.Now.ToString("yyyyMMddHHmmss") + ".zip";
+                    savedZipPath   = Path.Combine(pngDir, zipName);
+                    await File.WriteAllBytesAsync(savedZipPath, zipBytes);
 
-                    // ★ Rust DLL で全ページPNG生成
-                    for (int i = 0; i < pageCount; i++)
+                    // ── プレビュー用：ZIP内の pages/*.png を一時展開 ─
+                    progress.SetMessage("プレビュー準備中...");
+                    progress.SetProgress(95);
+
+                    using var ms      = new MemoryStream(zipBytes);
+                    using var zipArch = new System.IO.Compression.ZipArchive(
+                        ms, System.IO.Compression.ZipArchiveMode.Read);
+
+                    var pngEntries = zipArch.Entries
+                        .Where(en => en.FullName.StartsWith("pages/") &&
+                                     en.FullName.EndsWith(".png"))
+                        .OrderBy(en => en.FullName)
+                        .ToList();
+
+                    // 一時フォルダに展開してパスを _pagePngs に積む
+                    string tempDir = Path.Combine(Path.GetTempPath(),
+                        "acr_preview_" + Path.GetRandomFileName());
+                    Directory.CreateDirectory(tempDir);
+
+                    foreach (var pe in pngEntries)
                     {
-                        byte[] png = engine.RenderPagePng(templateJson, dataJson, i);
-                        string path = SavePngBytes(png);
-                        _pagePngs.Add(path);
-
-                        double pct = 80.0 + (i + 1) * 19.0 / pageCount;
-                        progress.SetProgress(pct);
+                        string dest = Path.Combine(tempDir,
+                            Path.GetFileName(pe.FullName));
+                        pe.ExtractToFile(dest, overwrite: true);
+                        _pagePngs.Add(dest);
                     }
 
                     progress.SetProgress(100);
@@ -358,7 +374,7 @@ namespace AcrossReportDesigner.Views
 
                 progress.Close();
                 UpdateButtons();
-                SetMessage($"表示完了：{_pagePngs.Count} ページ");
+                SetMessage($"表示完了：{_pagePngs.Count} ページ　ZIP保存先：{savedZipPath}");
             }
             catch (Exception ex)
             {
@@ -946,9 +962,7 @@ namespace AcrossReportDesigner.Views
         }
         private static string GetOutputDir()
         {
-            string dir = Path.Combine(
-                AppContext.BaseDirectory,
-                "Output");
+            string dir = AcrConfigService.ResolvePngDir();
             Directory.CreateDirectory(dir);
             return dir;
         }

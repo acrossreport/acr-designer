@@ -114,8 +114,11 @@ public sealed class DesignControlView : Border
         // ========= Shape =========
         if (Model.Type.Contains("Shape"))
         {
-            if (Model.BackStyle == 1)
-                Background = BrushFromOleColor(Model.BackColor);
+            // デザイナー上ではBackStyleに関わらずBackColorを表示する
+            // （BackStyle=0は印刷時透明の意味。デザイナーでは視認性優先）
+            Background = Model.BackColor != 0
+                ? BrushFromOleColor(Model.BackColor)
+                : new SolidColorBrush(Color.FromArgb(80, 180, 180, 180));
 
             BorderBrush = BrushFromOleColor(Model.LineColor);
             BorderThickness = new Thickness(1);
