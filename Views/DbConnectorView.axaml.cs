@@ -374,7 +374,9 @@ public partial class DbConnectorView : UserControl
                 2 => new PostgreSqlSource(),
                 3 => new MySqlSource(),
                 4 => new SQLiteSource(),
+#if WINDOWS
                 5 => new AccessSource(),
+#endif
                 _ => throw new NotSupportedException()
             };
             // ✅ 空白パラメータチェック
