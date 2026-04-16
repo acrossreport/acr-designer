@@ -1,3 +1,4 @@
+#if WINDOWS
 using AcrossReportDesigner.Data;
 using System;
 using System.Collections.Generic;
@@ -48,3 +49,4 @@ public sealed class AccessSource : IDataSource
         return table;
     }
 }
+#endif

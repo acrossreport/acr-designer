@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,6 +6,12 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
+
+  <!-- ✅ Windows判定 -->
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <AvaloniaXaml Remove="Schemas\**" />
     <AvaloniaXaml Remove="Views\新しいフォルダー\**" />
@@ -45,7 +51,8 @@
     <PackageReference Include="MySqlConnector" Version="2.5.0" />
     <PackageReference Include="Npgsql" Version="10.0.1" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.200" />
-		<PackageReference Include="System.Data.OleDb" Version="8.0.0" />
+    <!-- ✅ OleDb は Windows のみ -->
+    <PackageReference Include="System.Data.OleDb" Version="8.0.0" Condition="$([MSBuild]::IsOSPlatform('Windows'))"/>
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

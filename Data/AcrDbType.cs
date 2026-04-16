@@ -8,5 +8,8 @@ public enum AcrDbType
     PostgreSql,  // 2
     MySql,       // 3
     Sqlite,      // 4
-    Access       // 5
+    Csv,         // 5
+#if WINDOWS
+    Access       // 6
+#endif
 }

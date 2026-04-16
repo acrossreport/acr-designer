@@ -6,9 +6,10 @@ using Npgsql;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Data.Common;
-using System.Data.OleDb;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+#if WINDOWS
+using System.Data.OleDb;
+#endif
 
 namespace AcrossReportDesigner.Data;
 
@@ -26,9 +27,9 @@ public static class DbConnectionFactory
             AcrDbType.PostgreSql => new NpgsqlConnection(connectionString),
             AcrDbType.MySql      => new MySqlConnection(connectionString),
             AcrDbType.Sqlite     => new SqliteConnection(connectionString),
-            AcrDbType.Access     => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                                    ? new OleDbConnection(connectionString)
-                                    : throw new NotSupportedException("AccessはWindows環境でのみ使用できます。"),
+#if WINDOWS
+            AcrDbType.Access     => new OleDbConnection(connectionString),
+#endif
             _ => throw new NotSupportedException($"未対応のDB種別: {dbType}")
         };
     }
@@ -44,7 +45,6 @@ public static class DbConnectionFactory
 
         if (dbType == AcrDbType.Oracle)
         {
-            // ✅ Oracle は同期Openをスレッドプールで実行
             await Task.Run(() =>
             {
                 conn.Open();
