@@ -16,12 +16,15 @@ public sealed class DbProvider
         _dbType = dbType;
         _source = dbType switch
         {
+
             AcrDbType.Oracle     => new OracleSource(),
-            AcrDbType.SqlServer  => new SqlServerSource(),
+            AcrDbType.SqlServer => new SqlServerSource(),
             AcrDbType.PostgreSql => new PostgreSqlSource(),
-            AcrDbType.MySql      => new MySqlSource(),
-            AcrDbType.Sqlite     => new SQLiteSource(),
-            AcrDbType.Access     => new AccessSource(),
+            AcrDbType.MySql => new MySqlSource(),
+            AcrDbType.Sqlite => new SQLiteSource(),
+#if WINDOWS
+            AcrDbType.Access => new AccessSource(),
+#endif
             _ => throw new NotSupportedException($"未対応のDB種別: {dbType}")
         };
     }
