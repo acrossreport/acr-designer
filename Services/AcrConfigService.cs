@@ -16,7 +16,7 @@ public class AcrConfigModel
     public string PdfDir { get; set; } = "Output/PDF";
     public string PngDir { get; set; } = "Output/PNG";
     public string HtmlDir { get; set; } = "Output/html";
-    public string SqlDir  { get; set; } = "sql";
+    public string SqlDir  { get; set; } = "sqlHist";
 }
 
 public static class AcrConfigService

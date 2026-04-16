@@ -5,24 +5,39 @@
         Height="500"
         Title="SQL履歴">
 
-	<Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="*,Auto">
 
-		<ListBox x:Name="HistoryList"
+        <ListBox x:Name="HistoryList"
                  Margin="8">
 
-			<ListBox.ItemTemplate>
-				<DataTemplate>
-					<TextBlock Text="{Binding Summary}" />
-				</DataTemplate>
-			</ListBox.ItemTemplate>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="4,6,4,6">
+                        <!-- 1行目: 日時 + DB種別 -->
+                        <TextBlock Text="{Binding SummaryLine1}"
+                                   FontWeight="Bold"
+                                   FontSize="12"/>
+                        <!-- 2行目: 接続情報 -->
+                        <TextBlock Text="{Binding SummaryLine2}"
+                                   FontSize="11"
+                                   Foreground="#336699"
+                                   Margin="0,2,0,0"/>
+                        <!-- 3行目: SQL -->
+                        <TextBlock Text="{Binding SummaryLine3}"
+                                   FontSize="11"
+                                   Foreground="Gray"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
 
-		</ListBox>
+        </ListBox>
 
-		<Button Grid.Row="1"
+        <Button Grid.Row="1"
                 Margin="8"
                 HorizontalAlignment="Right"
                 Content="選択して復元"
                 Click="Select_Click"/>
 
-	</Grid>
+    </Grid>
 </Window>

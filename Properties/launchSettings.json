@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AcrossReportDesigner": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\acadmin\\Desktop\\acrorg\\AcrossReportDesigner\\bin\\Debug\\net8.0"
+    }
+  }
+}

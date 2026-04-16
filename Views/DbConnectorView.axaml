@@ -12,10 +12,6 @@
 			  ColumnDefinitions="260,140,Auto,Auto,Auto,Auto,Auto"
 			  ColumnSpacing="6"
 			  Margin="0,6,0,6">
-			<!-- ✅ SQL履歴ドロップダウン -->
-			<ComboBox x:Name="HistoryComboBox"
-					  Grid.Column="0"
-					  Height="34"/>
 			<!-- ✅ DB種別 -->
 			<ComboBox x:Name="DbTypeComboBox"
 					  Grid.Column="1"
@@ -26,7 +22,7 @@
 				<ComboBoxItem Content="PostgreSQL"/>
 				<ComboBoxItem Content="MySQL"/>
 				<ComboBoxItem Content="SQLite"/>
-				<ComboBoxItem Content="CSV"/>
+				<ComboBoxItem Content="Access"/>
 			</ComboBox>
 			<!-- ✅ ボタン共通スタイル -->
 			<Grid.Styles>
@@ -39,7 +35,8 @@
 				</Style>
 			</Grid.Styles>
 			<!-- ✅ 接続確認 -->
-			<Button Grid.Column="2"
+			<Button x:Name="ConnectButton"
+					Grid.Column="2"
 					Content="{Binding [Db_ConnCheck],   Source={StaticResource Loc}}"
 					Click="Connect_Click"/>
 			<!-- ✅ SQL実行 -->

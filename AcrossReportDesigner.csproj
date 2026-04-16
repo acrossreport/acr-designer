@@ -44,9 +44,15 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
     <PackageReference Include="MySqlConnector" Version="2.5.0" />
     <PackageReference Include="Npgsql" Version="10.0.1" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.200" />
+		<PackageReference Include="System.Data.OleDb" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Update="Resources\Strings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -77,6 +83,10 @@
 	  </None>
 	</ItemGroup>
 	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
 	  <EmbeddedResource Update="Resources\Strings.resx">
 	    <Generator>ResXFileCodeGenerator</Generator>
 	    <LastGenOutput>Strings.Designer.cs</LastGenOutput>
@@ -87,7 +97,7 @@
 	</ItemGroup>
 	<!-- ★ Rustビルド後に自動コピー -->
 	<Target Name="CopyRustDll" BeforeTargets="Build">
-	  <Copy SourceFiles="$(USERPROFILE)\Desktop\acr_rebuild\target\release\axr_runtime.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native\" SkipUnchangedFiles="true" Condition="Exists('$(USERPROFILE)\Desktop\acr_rebuild\target\release\axr_runtime.dll')" />
-	  <Copy SourceFiles="$(USERPROFILE)\Desktop\acr_html_engine\target\release\axr_layout.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native\" SkipUnchangedFiles="true" Condition="Exists('$(USERPROFILE)\Desktop\acr_html_engine\target\release\axr_layout.dll')" />
+	  <Copy SourceFiles="$(USERPROFILE)\Desktop\acrorg\Acr\target\release\axr_runtime.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native\" SkipUnchangedFiles="true" Condition="Exists('$(USERPROFILE)\Desktop\acrorg\Acr\target\release\axr_runtime.dll')" />
+	  <Copy SourceFiles="$(USERPROFILE)\Desktop\acrorg\Acr\target\release\axr_layout.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native\" SkipUnchangedFiles="true" Condition="Exists('$(USERPROFILE)\Desktop\acrorg\Acr\target\release\axr_layout.dll')" />
 	</Target>
 </Project>

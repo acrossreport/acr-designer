@@ -68,15 +68,12 @@ public partial class DbConnectorView : UserControl
             _sqlTimer.Start();
         };
 
-        HistoryComboBox.SelectionChanged += HistoryComboBox_SelectionChanged;
-        ReloadHistoryDropdown();
-
-        // ✅ 初期接続文字列（例）
         //ConnectionStringTextBox.Text =
-        //    "user id=miuraya;password=miuraya;" +
-        //    "data source=" +
-        //    "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=192.168.33.45)(PORT=1521))" +
-        //    "(CONNECT_DATA=(SERVICE_NAME=acm50.sunfood)));";
+        //    "User Id=miuraya;" +
+        //    "Password=miuraya;" +
+        //    "Data Source=192.168.33.45:1521/acm50.sunfood;" +
+        //    "HA Events=false;" +
+        //    "Pooling=false;";
 
         //ConnectionStringTextBox.Text =
         //    "Server=localhost\\SQLEXPRESS,61854;" +
@@ -85,12 +82,12 @@ public partial class DbConnectorView : UserControl
         //    "Password=Across5567;" +
         //    "TrustServerCertificate=True;";
 
-        ConnectionStringTextBox.Text =
-            "Host=localhost;" +
-            "Port=5432;" +
-            "Database=acm;" +
-            "Username=postgres;" +
-            "Password=Across5567;";
+        //ConnectionStringTextBox.Text =
+        //    "Host=localhost;" +
+        //    "Port=5432;" +
+        //    "Database=acm;" +
+        //    "Username=postgres;" +
+        //    "Password=Across5567;";
 
         //ConnectionStringTextBox.Text =
         //    "Server=localhost;" +
@@ -99,6 +96,9 @@ public partial class DbConnectorView : UserControl
         //    "User Id=root;" +
         //    "Password=Across5567;";
 
+        //ConnectionStringTextBox.Text =
+        //    "Provider=Microsoft.ACE.OLEDB.12.0;" +
+        //    "Data Source=C:\\path\\to\\Northwind.accdb;";
         // ✅ DB種別変更時のダイアログ制御
         DbTypeComboBox.SelectionChanged += DbType_SelectionChanged;
         
@@ -112,7 +112,7 @@ public partial class DbConnectorView : UserControl
     {
         int index = DbTypeComboBox.SelectedIndex;
 
-        // SQLite = 4, CSV = 5 (CSVがある場合)
+        // SQLite = 4, Access = 5
         if (index == 4)
         {
             await PickFileForConnectionAsync(
@@ -121,12 +121,12 @@ public partial class DbConnectorView : UserControl
                 buildConnStr: path => $"Data Source={path}"
             );
         }
-        else if (index == 5) // CSV
+        else if (index == 5) // Access
         {
             await PickFileForConnectionAsync(
-                title: "CSVファイルを選択",
-                filters: new[] { ("CSV Files", new[] { "csv" }) },
-                buildConnStr: path => $"Data Source={Path.GetDirectoryName(path)};Extended Properties=\"text;HDR=Yes\";FileName={Path.GetFileName(path)}"
+                title: "Accessファイルを選択",
+                filters: new[] { ("Access Files", new[] { "accdb", "mdb" }) },
+                buildConnStr: path => $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={path};"
             );
         }
     }
@@ -163,41 +163,58 @@ public partial class DbConnectorView : UserControl
         if (string.IsNullOrEmpty(path)) return;
         ConnectionStringTextBox.Text = buildConnStr(path);
     }
-
-    private void HistoryComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        int index = HistoryComboBox.SelectedIndex;
-
-        // ✅ 先頭（案内）は無視
-        if (index <= 0)
-            return;
-
-        // ✅ 選ばれた履歴
-        var item = _historyCache[index - 1];
-
-        // ✅ SQL復元
-        ConnectionStringTextBox.Text = item.Connection;
-        SqlTextBox.Text = item.Sql;
-
-        // ✅ パラメータ復元
-        ParamList.Clear();
-
-        foreach (var kv in item.Parameters)
-        {
-            ParamList.Add(new SqlParam
-            {
-                Name = kv.Key,
-                Value = kv.Value
-            });
-        }
-    }
     // =====================================================
-    // ✅ 接続確認
+    // ✅ 接続確認 - 実際にDB接続テストを行う
     // =====================================================
     private async void Connect_Click(object? sender, RoutedEventArgs e)
     {
-        ExecuteButton.IsEnabled = true;
-        await DialogService.ShowMessageAsync(this, "接続設定を確認しました", "情報");
+        // ✅ 接続文字列チェック
+        if (string.IsNullOrWhiteSpace(ConnectionStringTextBox.Text))
+        {
+            await DialogService.ShowMessageAsync(this, "接続文字列が入力されていません。", "エラー");
+            return;
+        }
+
+        // ✅ SQLチェック
+        if (string.IsNullOrWhiteSpace(SqlTextBox.Text))
+        {
+            await DialogService.ShowMessageAsync(this, "SQLが入力されていません。", "エラー");
+            return;
+        }
+
+        // ✅ パラメータ値チェック
+        var emptyParams = ParamList.Where(p => string.IsNullOrWhiteSpace(p.Value)).ToList();
+        if (emptyParams.Any())
+        {
+            string names = string.Join(", ", emptyParams.Select(p => p.Name));
+            await DialogService.ShowMessageAsync(this, $"パラメータの値が入力されていません。\n{names}", "エラー");
+            return;
+        }
+
+        // ✅ ボタン無効化（二重クリック防止）
+        ConnectButton.IsEnabled = false;
+        ExecuteButton.IsEnabled = false;
+
+        try
+        {
+            var dbType = (AcrDbType)DbTypeComboBox.SelectedIndex;
+            string connStr = ConnectionStringTextBox.Text.Trim();
+
+            // ✅ 全DB共通で非同期接続テスト
+            await DbConnectionFactory.TestConnectionAsync(dbType, connStr);
+
+            ExecuteButton.IsEnabled = true;
+            await DialogService.ShowMessageAsync(this, "接続に成功しました。", "接続確認");
+        }
+        catch (Exception ex)
+        {
+            ExecuteButton.IsEnabled = false;
+            await DialogService.ShowMessageAsync(this, $"接続に失敗しました。\n{ex.Message}", "接続エラー");
+        }
+        finally
+        {
+            ConnectButton.IsEnabled = true;
+        }
     }
 
     private async void Execute_Click(object? sender, RoutedEventArgs e)
@@ -208,6 +225,7 @@ public partial class DbConnectorView : UserControl
     private void Clear_Click(object? sender, RoutedEventArgs e)
     {
         SqlTextBox.Text = string.Empty;
+         ConnectionStringTextBox.Text = string.Empty;  // ✅ 追加
 
         PreviewGrid.ItemsSource = null;
         PreviewGrid.Columns.Clear();
@@ -338,6 +356,8 @@ public partial class DbConnectorView : UserControl
     {
         try
         {
+            System.Diagnostics.Debug.WriteLine($"★SQL=[{SqlTextBox.Text!}]");
+            System.Diagnostics.Debug.WriteLine($"★CONN=[{ConnectionStringTextBox.Text!}]");
             if (string.IsNullOrWhiteSpace(SqlTextBox.Text))
             {
                 await DialogService.ShowMessageAsync(
@@ -354,6 +374,7 @@ public partial class DbConnectorView : UserControl
                 2 => new PostgreSqlSource(),
                 3 => new MySqlSource(),
                 4 => new SQLiteSource(),
+                5 => new AccessSource(),
                 _ => throw new NotSupportedException()
             };
             // ✅ 空白パラメータチェック
@@ -387,8 +408,6 @@ public partial class DbConnectorView : UserControl
             SaveToHistory();
             // ✅ SqlDirにSQL実行ログを保存
             SaveSqlLog(SqlTextBox.Text ?? "");
-            // ✅ 履歴ドロップダウン更新
-            ReloadHistoryDropdown();
             // ✅ PreviewGrid表示用に変換
             var list = table.AsEnumerable()
                 .Select(row =>
@@ -428,7 +447,7 @@ public partial class DbConnectorView : UserControl
             await DialogService.ShowMessageAsync(
                 this,
                 ex.Message,
-                "SQL実行エラー"
+                "SQLエラー"
             );
         }
     }
@@ -456,6 +475,12 @@ public partial class DbConnectorView : UserControl
     //    ファイル名: yyyyMMddHHmmss_sql.json
     //    内容: 実行日時 + SQL全文
     // =====================================================
+
+    // =====================================================
+    // ✅ SQL実行ログを SqlDir に保存
+    //    ファイル名: yyyyMMddHHmmss_sql.json
+    //    内容: 実行日時 + 接続情報 + SQL全文
+    // =====================================================
     private void SaveSqlLog(string sql)
     {
         try
@@ -468,10 +493,11 @@ public partial class DbConnectorView : UserControl
 
             var logObj = new
             {
-                ExecutedAt  = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                DbType      = DbTypeComboBox.SelectedIndex.ToString(),
-                Sql         = sql,
-                Parameters  = ParamList.ToDictionary(p => p.Name, p => p.Value)
+                ExecutedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                DbType = DbTypeComboBox.SelectedIndex.ToString(),
+                ConnectionString = ConnectionStringTextBox.Text ?? "",   // ✅ 追加
+                Sql = sql,
+                Parameters = ParamList.ToDictionary(p => p.Name, p => p.Value)
             };
 
             string json = JsonSerializer.Serialize(
@@ -484,14 +510,6 @@ public partial class DbConnectorView : UserControl
         {
             System.Diagnostics.Debug.WriteLine($"[SqlLog] 保存失敗: {ex.Message}");
         }
-    }
-    private void ReloadHistoryDropdown()
-    {
-        _historyCache = HistoryManager.Load();
-        HistoryComboBox.ItemsSource =
-            _historyCache.Select(x =>
-                $"{x.Time:MM/dd HH:mm} {(x.Sql)}"
-            ).ToList();
     }
     // =====================================================
     // ✅ JSON Export（ファイル保存ダイアログ）
