@@ -1,5 +1,5 @@
 # ACR Designer
-ACR Designer is a WYSIWYG report designer for the __ACR (Across Report Renderer)__ engine. It enables pixel-perfect, printer-independent report design. Built with Avalonia UI — runs natively on Windows.
+ACR Designer is a WYSIWYG report designer for the __ACR (Across Report Renderer)__ engine. It enables pixel-perfect, printer-independent report design. Built with Avalonia UI — runs natively on Windows and macOS.
 
 ## Download
 Go to the __Releases__ page and download the package for your platform.
@@ -7,6 +7,7 @@ Go to the __Releases__ page and download the package for your platform.
 | Platform | File |
 |---|---|
 | Windows (x64) | `acr-designer-win-x64-vX.X.X.zip` |
+| macOS (Apple Silicon) | `acr-designer-v0.1.0-mac-arm64.zip` |
 
 ## Getting Started
 
@@ -15,12 +16,7 @@ Go to the __Releases__ page and download the package for your platform.
 2. Place `acrconfig.json` in the same folder as `AcrossReportDesigner.exe`.
 3. Double-click `AcrossReportDesigner.exe` to launch.
 
-## Sample Data
-Sample `acrconfig.json` and template files will be available soon.
-
-## Requirements
-* No runtime installation required. The package is self-contained.
-* `acrconfig.json` is required to launch the application.
-
-## License
-© Across Systems Corporation. All rights reserved.
+### macOS (Apple Silicon)
+1. Extract the ZIP file to any folder.
+2. Place `acrconfig.json` in the same folder as `AcrossReportDesigner`.
+3. Open Terminal and run:
