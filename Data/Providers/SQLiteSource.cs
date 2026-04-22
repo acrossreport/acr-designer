@@ -15,24 +15,34 @@ public sealed class SQLiteSource : IDataSource
         Dictionary<string, object?> parameters)
     {
         var table = new DataTable();
-
         using var conn = new SqliteConnection(connectionString);
         await conn.OpenAsync();
-
         using var cmd = conn.CreateCommand();
         cmd.CommandText = sql;
 
-        // ✅ パラメータ追加
         foreach (var kv in parameters)
         {
-            // ✅ SQLite は @ プレフィックス必須
             string name = "@" + kv.Key.TrimStart(':', '@');
             object value = kv.Value ?? DBNull.Value;
-
             cmd.Parameters.AddWithValue(name, value);
         }
+
         using var reader = await cmd.ExecuteReaderAsync();
-        table.Load(reader);
+
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            table.Columns.Add(reader.GetName(i), typeof(string));
+        }
+
+        while (await reader.ReadAsync())
+        {
+            var row = table.NewRow();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                row[i] = reader.IsDBNull(i) ? DBNull.Value : reader.GetValue(i).ToString();
+            }
+            table.Rows.Add(row);
+        }
 
         return table;
     }
