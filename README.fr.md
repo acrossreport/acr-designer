@@ -22,7 +22,7 @@ ACR Designer est une application de bureau permettant de créer et de modifier d
 | macOS (Intel) | Prévu |
 | Linux x64 | Prévu |
 
-- Versions de Windows prises en charge : 【要確認】
+- Versions de Windows prises en charge : Windows 11
 - Le runtime .NET est inclus ; aucune installation séparée n'est nécessaire
 
 ## Téléchargement
