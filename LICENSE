@@ -1,36 +1,118 @@
-ACR Designer — End User License Agreement (EULA)
+ACR Designer Software License
 
-Copyright (c) 2026 Across Systems Corporation. All rights reserved.
+Copyright (c) Across Systems Corporation. All rights reserved.
 
-This software ("ACR Designer") is provided as a compiled binary
-distribution. By installing or using this software, you agree to the
-following terms:
+This license governs the use of ACR Designer ("the Software") distributed in
+binary form through https://github.com/acrossreport/acr-designer.
 
-1. GRANT OF LICENSE
-   You are granted a non-exclusive, non-transferable license to install
-   and use this software for its intended purpose on computers that you
-   own or control.
+1. Grant of Use
+   You may download, install, and use the Software free of charge, for both
+   personal and business purposes.
 
-2. RESTRICTIONS
-   You may NOT:
-   - Reverse engineer, decompile, or disassemble this software, except
-     to the extent applicable law expressly permits such activity.
-   - Redistribute, sublicense, sell, rent, lease, or otherwise transfer
-     this software or any portion thereof to any third party.
-   - Modify or create derivative works based on this software.
+2. Watermark
+   The Software is intended for designing and checking reports. PDF and PNG
+   output of the Software always includes a watermark, whether or not you
+   are registered. For production printing and output, please use ACR
+   Engine or ACR Viewer. Details are described on the official website
+   (https://acrossreport.com).
 
-3. NO WARRANTY
-   This software is provided "AS IS", without warranty of any kind,
-   express or implied, including but not limited to the warranties of
-   merchantability, fitness for a particular purpose, and
-   non-infringement.
+3. Redistribution
+   You may not redistribute the Software to any third party in any form,
+   including uploading it to other websites or bundling it with other
+   products. The Software is distributed only through
+   https://github.com/acrossreport/acr-designer.
+   Copying the Software for installation on multiple computers within your
+   own organization is permitted.
 
-4. LIMITATION OF LIABILITY
-   In no event shall Across Systems Corporation be liable for any
-   claim, damages, or other liability arising from the use of this
-   software.
+4. Restrictions
+   You may not:
+   - reverse engineer, decompile, or disassemble the Software;
+   - modify the Software, or remove or alter the watermark;
+   - remove or alter copyright notices included in the Software.
 
-5. GOVERNING LAW
-   This Agreement shall be governed by the laws of Japan.
+5. Source Code
+   The source code of the Software is not publicly available. This license
+   does not grant any right to the source code.
 
-For inquiries, contact: across.support@gmail.com
+6. Intellectual Property
+   All rights to the Software belong to Across Systems Corporation.
+   The intermediate drawing instruction architecture of ACR is patent
+   pending.
+
+7. Disclaimer of Warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+8. Limitation of Liability
+   IN NO EVENT SHALL ACROSS SYSTEMS CORPORATION BE LIABLE FOR ANY DAMAGES
+   ARISING FROM THE USE OF OR INABILITY TO USE THE SOFTWARE, INCLUDING BUT
+   NOT LIMITED TO LOSS OF DATA, MISPRINTS, OR BUSINESS INTERRUPTION.
+
+9. Governing Law
+   This license is governed by the laws of Japan.
+
+10. Support
+   The Software is provided without support. Support may be provided
+   separately upon request, under terms agreed on a case-by-case basis.
+
+Contact: across.support@gmail.com
+
+--------------------------------------------------------------------------
+
+ACR Designer ソフトウェア使用許諾
+
+Copyright (c) Across Systems Corporation. All rights reserved.
+
+本許諾は、https://github.com/acrossreport/acr-designer で配布する
+ACR Designer（以下「本ソフトウェア」）のバイナリの利用条件を定めるものです。
+
+1. 利用の許諾
+   本ソフトウェアは、個人・業務を問わず無償でダウンロード、インストール、
+   利用できます。
+
+2. ウォーターマーク
+   本ソフトウェアは帳票の設計・確認用です。本ソフトウェアの PDF・PNG 出力
+   には、登録の有無にかかわらず常にウォーターマークが入ります。
+   本番の印字・出力には ACR Engine または ACR Viewer をご利用ください。
+   詳しくは公式サイト（https://acrossreport.com）をご覧ください。
+
+3. 再配布
+   本ソフトウェアを、形態を問わず第三者へ再配布することを禁止します
+   （他のウェブサイトへの掲載、他の製品への同梱を含みます）。
+   本ソフトウェアの配布は https://github.com/acrossreport/acr-designer
+   のみで行います。
+   なお、自組織内の複数のコンピュータへ設置するためのコピーは認めます。
+
+4. 禁止事項
+   - 本ソフトウェアのリバースエンジニアリング、逆コンパイル、逆アセンブル
+   - 本ソフトウェアの改変、およびウォーターマークの除去・改変
+   - 本ソフトウェアに含まれる著作権表示の削除・改変
+
+5. ソースコード
+   本ソフトウェアのソースコードは公開していません。本許諾はソースコードに
+   関する権利を与えるものではありません。
+
+6. 知的財産
+   本ソフトウェアに関する権利は Across Systems Corporation に帰属します。
+   ACR の中間描画命令アーキテクチャは特許出願中です。
+
+7. 無保証
+   本ソフトウェアは「現状のまま」提供され、商品性、特定目的への適合性、
+   権利非侵害を含め、明示・黙示を問わず一切の保証をしません。
+
+8. 責任の制限
+   本ソフトウェアの利用または利用不能により生じた損害（データの消失、
+   誤印字、業務の中断などを含む）について、Across Systems Corporation は
+   一切の責任を負いません。
+
+9. 準拠法
+   本許諾は日本法に準拠します。
+
+10. サポート
+   本ソフトウェアにはサポートは含まれません。サポートをご希望の場合は、
+   個別にご相談ください。
+
+お問い合わせ：across.support@gmail.com
+
+（英語版と日本語版に相違がある場合は、日本語版を優先します。）
