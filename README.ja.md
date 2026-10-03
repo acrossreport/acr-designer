@@ -22,7 +22,7 @@ ACR Designer は、ACR(AcrossReport)の帳票定義(JSON)を作成・編集す�
 | macOS(Intel) | 対応予定 |
 | Linux x64 | 対応予定 |
 
-- 対応する Windows のバージョン:【要確認】
+- 対応する Windows のバージョン:Windows 11
 - .NET ランタイムを同梱しているため、別途インストールは不要です
 
 ## ダウンロード

@@ -22,7 +22,7 @@ ACR Designer is a desktop application for creating and editing ACR (AcrossReport
 | macOS (Intel) | Planned |
 | Linux x64 | Planned |
 
-- Supported Windows versions: 【要確認】
+- Supported Windows versions: Windows 11
 - The .NET runtime is included, so no separate installation is required
 
 ## Download
