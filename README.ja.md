@@ -17,19 +17,26 @@ ACR Designer は、ACR(AcrossReport)の帳票定義(JSON)を作成・編集す�
 
 | OS | 状況 |
 |---|---|
-| Windows x64 | 対応(本リリース) |
-| macOS(Apple Silicon) | 対応予定 |
-| macOS(Intel) | 対応予定 |
+| Windows x64 | 対応 |
+| Windows ARM64 | 対応 |
+| macOS(Apple Silicon) | 対応 |
+| macOS(Intel) | 対応 |
 | Linux x64 | 対応予定 |
 
 - 対応する Windows のバージョン:Windows 11
 - .NET ランタイムを同梱しているため、別途インストールは不要です
+- macOS 版は Developer ID で署名し、Apple の notarize 済みです
 
 ## ダウンロード
 
 [Releases](https://github.com/acrossreport/acr-designer/releases) から、お使いの OS 用のファイルをダウンロードしてください。
 
-- Windows x64:`AcrossReportDesigner-v0.0.1-win-x64.zip`
+- Windows x64:`AcrossReportDesigner-v0.1.2-win-x64.zip`(サンプルのテンプレート・データ付き)
+- Windows ARM64:`AcrossReportDesigner-v0.1.2-win-arm64.zip`(サンプルのテンプレート・データ付き)
+- macOS(Apple Silicon):`AcrossReportDesigner-v0.1.2-osx-arm64.zip`
+- macOS(Intel):`AcrossReportDesigner-v0.1.2-osx-x64.zip`
+
+> **macOS についての補足:** 設定・テンプレート・データ・出力は `~/Desktop/AcrossReportDesigner` に保存されます。macOS 版にはまだサンプルファイルは含まれていません。
 
 ## インストールと起動
 
