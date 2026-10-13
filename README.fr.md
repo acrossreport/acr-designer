@@ -21,7 +21,7 @@ ACR Designer est une application de bureau permettant de créer et de modifier d
 | Windows ARM64 | Pris en charge |
 | macOS (Apple Silicon) | Pris en charge |
 | macOS (Intel) | Pris en charge |
-| Linux x64 | Prévu |
+| Linux x64 | Pris en charge |
 
 - Versions de Windows prises en charge : Windows 11
 - Le runtime .NET est inclus ; aucune installation séparée n'est nécessaire
@@ -35,15 +35,17 @@ Téléchargez le fichier correspondant à votre OS depuis les [Releases](https:/
 - Windows ARM64 : `AcrossReportDesigner-v0.1.2-win-arm64.zip` (modèles et données d'exemple inclus)
 - macOS (Apple Silicon) : `AcrossReportDesigner-v0.1.2-osx-arm64.zip`
 - macOS (Intel) : `AcrossReportDesigner-v0.1.2-osx-x64.zip`
+- Linux x64 : `AcrossReportDesigner-v0.1.2-linux-x64.zip`
 
 > **Remarque (macOS) :** les paramètres, modèles, données et sorties sont enregistrés dans `~/Desktop/AcrossReportDesigner`. La version macOS n'inclut pas encore les fichiers d'exemple.
+> **Remarque (Linux) :** la version Linux n'inclut pas encore les fichiers d'exemple.
 
 ## Installation et lancement
 
 1. Extrayez le fichier zip téléchargé dans le dossier de votre choix
-2. Lancez `AcrossReportDesigner.exe` dans le dossier extrait
+2. Windows : lancez `AcrossReportDesigner.exe` dans le dossier extrait. macOS/Linux : lancez `./AcrossReportDesigner` (sous Linux, il peut être nécessaire d'exécuter d'abord `chmod +x AcrossReportDesigner`)
 
-Au premier lancement, le dossier `Output` (`PDF`, `PNG`, `html`) et d'autres dossiers sont créés automatiquement à côté de l'exe.
+Au premier lancement, le dossier `Output` (`PDF`, `PNG`, `html`) et d'autres dossiers sont créés automatiquement à côté de l'exécutable (sous macOS uniquement, dans `~/Desktop/AcrossReportDesigner`).
 
 ## Utilisation
 
