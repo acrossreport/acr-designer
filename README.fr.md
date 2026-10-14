@@ -61,6 +61,7 @@ ACR Designer est destiné à la vérification des rapports : les exports PDF et 
 
 ## Liens
 
+- ACR Samples (modèles/données d'exemple, à essayer tout de suite) : https://github.com/acrossreport/acr-samples
 - ACR Generator : https://github.com/acrossreport/acr-generator
 - Spécification ACR (modèle JSON) : https://github.com/acrossreport/acr-spec
 - Site officiel : https://acrossreport.com

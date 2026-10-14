@@ -61,6 +61,7 @@ ACR Designer は帳票の確認用のため、PDF・PNG の出力には、登録
 
 ## 関連リンク
 
+- ACR Samples(サンプルテンプレート・データ。すぐに試せます):https://github.com/acrossreport/acr-samples
 - ACR Generator:https://github.com/acrossreport/acr-generator
 - ACR 仕様(JSON テンプレート):https://github.com/acrossreport/acr-spec
 - 公式サイト:https://acrossreport.com

@@ -61,6 +61,7 @@ ACR Designer is intended for checking reports, so PDF and PNG output always incl
 
 ## Links
 
+- ACR Samples (sample templates/data, try it right away): https://github.com/acrossreport/acr-samples
 - ACR Generator: https://github.com/acrossreport/acr-generator
 - ACR specification (JSON template): https://github.com/acrossreport/acr-spec
 - Official website: https://acrossreport.com
