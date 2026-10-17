@@ -22,6 +22,7 @@ ACR Designer est une application de bureau permettant de créer et de modifier d
 | macOS (Apple Silicon) | Pris en charge |
 | macOS (Intel) | Pris en charge |
 | Linux x64 | Pris en charge |
+| Linux ARM64 | Pris en charge |
 
 - Versions de Windows prises en charge : Windows 11
 - Le runtime .NET est inclus ; aucune installation séparée n'est nécessaire
@@ -36,9 +37,10 @@ Téléchargez le fichier correspondant à votre OS depuis les [Releases](https:/
 - macOS (Apple Silicon) : `AcrossReportDesigner-v0.1.2-osx-arm64.zip`
 - macOS (Intel) : `AcrossReportDesigner-v0.1.2-osx-x64.zip`
 - Linux x64 : `AcrossReportDesigner-v0.1.2-linux-x64.zip`
+- Linux ARM64 : `AcrossReportDesigner-v0.1.2-linux-arm64.zip` (modèles et données d'exemple inclus)
 
 > **Remarque (macOS) :** les paramètres, modèles, données et sorties sont enregistrés dans `~/Desktop/AcrossReportDesigner`. La version macOS n'inclut pas encore les fichiers d'exemple.
-> **Remarque (Linux) :** la version Linux n'inclut pas encore les fichiers d'exemple.
+> **Remarque (Linux) :** la version Linux x64 n'inclut pas encore les fichiers d'exemple. La version Linux ARM64 les inclut.
 
 ## Installation et lancement
 
