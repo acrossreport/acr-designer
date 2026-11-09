@@ -59,7 +59,7 @@ ACR Designer は、ACR(AcrossReport)の帳票定義(JSON)を作成・編集す�
 
 ## 出力について
 
-ACR Designer は帳票の確認用のため、PDF・PNG の出力には、登録の有無にかかわらず常にウォーターマークが入ります。本番の印刷・出力には ACR Engine または ACR Viewer をお使いください。詳しくは [公式サイト](https://acrossreport.com) をご覧ください。
+PDF・PNG 出力は無償で、ウォーターマークは入りません。
 
 ## 関連リンク
 

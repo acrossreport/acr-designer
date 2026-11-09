@@ -59,7 +59,7 @@ On first launch, the `Output` folder (`PDF`, `PNG`, `html`) and other folders ar
 
 ## About Output
 
-ACR Designer is intended for checking reports, so PDF and PNG output always includes a watermark, whether or not you are registered. For production printing and output, please use ACR Engine or ACR Viewer. See the [official website](https://acrossreport.com) for details.
+PDF and PNG output is free of charge and free of any watermark.
 
 ## Links
 

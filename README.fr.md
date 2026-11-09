@@ -59,7 +59,7 @@ Au premier lancement, le dossier `Output` (`PDF`, `PNG`, `html`) et d'autres dos
 
 ## À propos de l'export
 
-ACR Designer est destiné à la vérification des rapports : les exports PDF et PNG comportent toujours un filigrane, que vous soyez enregistré ou non. Pour l'impression et l'export en production, utilisez ACR Engine ou ACR Viewer. Consultez le [site officiel](https://acrossreport.com) pour plus de détails.
+Les exports PDF et PNG sont gratuits et sans filigrane.
 
 ## Liens
 

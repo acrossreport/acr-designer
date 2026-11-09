@@ -9,12 +9,9 @@ binary form through https://github.com/acrossreport/acr-designer.
    You may download, install, and use the Software free of charge, for both
    personal and business purposes.
 
-2. Watermark
-   The Software is intended for designing and checking reports. PDF and PNG
-   output of the Software always includes a watermark, whether or not you
-   are registered. For production printing and output, please use ACR
-   Engine or ACR Viewer. Details are described on the official website
-   (https://acrossreport.com).
+2. Output
+   All PDF and PNG output of the Software is free of charge and free of
+   any watermark.
 
 3. Redistribution
    You may not redistribute the Software to any third party in any form,
@@ -27,7 +24,7 @@ binary form through https://github.com/acrossreport/acr-designer.
 4. Restrictions
    You may not:
    - reverse engineer, decompile, or disassemble the Software;
-   - modify the Software, or remove or alter the watermark;
+   - modify the Software;
    - remove or alter copyright notices included in the Software.
 
 5. Source Code
@@ -71,11 +68,8 @@ ACR Designer（以下「本ソフトウェア」）のバイナリの利用条�
    本ソフトウェアは、個人・業務を問わず無償でダウンロード、インストール、
    利用できます。
 
-2. ウォーターマーク
-   本ソフトウェアは帳票の設計・確認用です。本ソフトウェアの PDF・PNG 出力
-   には、登録の有無にかかわらず常にウォーターマークが入ります。
-   本番の印字・出力には ACR Engine または ACR Viewer をご利用ください。
-   詳しくは公式サイト（https://acrossreport.com）をご覧ください。
+2. 出力
+   本ソフトウェアの PDF・PNG 出力は無償で、ウォーターマークは入りません。
 
 3. 再配布
    本ソフトウェアを、形態を問わず第三者へ再配布することを禁止します
@@ -86,7 +80,7 @@ ACR Designer（以下「本ソフトウェア」）のバイナリの利用条�
 
 4. 禁止事項
    - 本ソフトウェアのリバースエンジニアリング、逆コンパイル、逆アセンブル
-   - 本ソフトウェアの改変、およびウォーターマークの除去・改変
+   - 本ソフトウェアの改変
    - 本ソフトウェアに含まれる著作権表示の削除・改変
 
 5. ソースコード
